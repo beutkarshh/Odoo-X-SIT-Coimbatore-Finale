@@ -35,7 +35,7 @@ export default function PortalProducts() {
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-semibold text-foreground">{plan.name}</h3>
                   <div className="mt-4">
-                    <span className="text-3xl font-bold text-foreground">${plan.price.toFixed(2)}</span>
+                    <span className="text-3xl font-bold text-foreground">₹{plan.price.toFixed(0)}</span>
                     <span className="text-sm text-muted-foreground">/{plan.billingPeriod.toLowerCase()}</span>
                   </div>
                 </div>
@@ -86,7 +86,7 @@ export default function PortalProducts() {
                 <tr key={product.id}>
                   <td className="font-medium text-foreground">{product.name}</td>
                   <td>{product.type}</td>
-                  <td>${product.salePrice.toFixed(2)}</td>
+                  <td>₹{product.salePrice.toFixed(0)}</td>
                   <td>
                     <Button variant="outline" size="sm" className="h-8">
                       Add

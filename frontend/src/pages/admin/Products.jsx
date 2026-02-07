@@ -109,8 +109,8 @@ export default function AdminProducts() {
                 <tr key={product.id}>
                   <td className="font-medium text-foreground">{product.name}</td>
                   <td>{product.type}</td>
-                  <td>${product.salePrice.toFixed(2)}</td>
-                  <td>${product.costPrice.toFixed(2)}</td>
+                  <td>₹{product.salePrice.toFixed(0)}</td>
+                  <td>₹{product.costPrice.toFixed(0)}</td>
                   <td className="text-success">{margin}%</td>
                   <td>
                     <div className="flex items-center gap-2">
@@ -169,12 +169,12 @@ export default function AdminProducts() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="salePrice" className="form-label">
-                  Sale Price ($)
+                  Sale Price (₹)
                 </Label>
                 <Input
                   id="salePrice"
                   type="number"
-                  step="0.01"
+                  step="1"
                   value={formData.salePrice}
                   onChange={(e) => setFormData((prev) => ({ ...prev, salePrice: e.target.value }))}
                   className="form-input"
@@ -183,12 +183,12 @@ export default function AdminProducts() {
               </div>
               <div>
                 <Label htmlFor="costPrice" className="form-label">
-                  Cost Price ($)
+                  Cost Price (₹)
                 </Label>
                 <Input
                   id="costPrice"
                   type="number"
-                  step="0.01"
+                  step="1"
                   value={formData.costPrice}
                   onChange={(e) => setFormData((prev) => ({ ...prev, costPrice: e.target.value }))}
                   className="form-input"

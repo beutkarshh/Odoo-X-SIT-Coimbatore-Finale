@@ -31,7 +31,7 @@ export default function PortalSubscriptions() {
                   <div>
                     <p className="text-xs text-muted-foreground">Price</p>
                     <p className="text-sm font-medium text-foreground">
-                      ${plan?.price.toFixed(2) || '0.00'} / {plan?.billingPeriod || 'month'}
+                      ₹{plan?.price.toFixed(0) || '0'} / {plan?.billingPeriod || 'month'}
                     </p>
                   </div>
                   <div>

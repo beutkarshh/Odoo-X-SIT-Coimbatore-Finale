@@ -135,7 +135,7 @@ export default function AdminPlans() {
               return (
                 <tr key={plan.id} className={cn(expired && 'opacity-50')}>
                   <td className="font-medium text-foreground">{plan.name}</td>
-                  <td>${plan.price.toFixed(2)}</td>
+                  <td>₹{plan.price.toFixed(0)}</td>
                   <td>{plan.billingPeriod}</td>
                   <td>{plan.minQty}</td>
                   <td>{new Date(plan.startDate).toLocaleDateString()}</td>
@@ -195,12 +195,12 @@ export default function AdminPlans() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="price" className="form-label">
-                  Price ($)
+                  Price (₹)
                 </Label>
                 <Input
                   id="price"
                   type="number"
-                  step="0.01"
+                  step="1"
                   value={formData.price}
                   onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                   className="form-input"

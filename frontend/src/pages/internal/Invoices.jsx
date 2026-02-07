@@ -61,7 +61,7 @@ export default function InternalInvoices() {
                   <td className="font-medium text-foreground">{invoice.number}</td>
                   <td>{invoice.user?.name}</td>
                   <td>{invoice.subscription?.number}</td>
-                  <td>${invoice.total.toFixed(2)}</td>
+                  <td>₹{invoice.total.toFixed(0)}</td>
                   <td>{new Date(invoice.createdAt).toLocaleDateString()}</td>
                   <td>
                     <StatusBadge status={invoice.status} />

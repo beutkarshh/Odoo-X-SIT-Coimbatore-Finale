@@ -111,36 +111,36 @@ export const mockProducts = [
     id: 1,
     name: 'Cloud Storage Basic',
     type: 'Service',
-    salePrice: 9.99,
-    costPrice: 3.00,
+    salePrice: 799,
+    costPrice: 250,
   },
   {
     id: 2,
     name: 'Cloud Storage Pro',
     type: 'Service',
-    salePrice: 29.99,
-    costPrice: 8.00,
+    salePrice: 2499,
+    costPrice: 650,
   },
   {
     id: 3,
     name: 'API Access',
     type: 'Service',
-    salePrice: 49.99,
-    costPrice: 15.00,
+    salePrice: 4199,
+    costPrice: 1250,
   },
   {
     id: 4,
     name: 'Premium Support',
     type: 'Support',
-    salePrice: 99.99,
-    costPrice: 40.00,
+    salePrice: 8299,
+    costPrice: 3300,
   },
   {
     id: 5,
     name: 'Analytics Dashboard',
     type: 'Feature',
-    salePrice: 19.99,
-    costPrice: 5.00,
+    salePrice: 1649,
+    costPrice: 420,
   },
 ];
 
@@ -148,47 +148,82 @@ export const mockPlans = [
   {
     id: 1,
     name: 'Starter Plan',
-    price: 29.99,
+    price: 2499,
     billingPeriod: 'Monthly',
     minQty: 1,
+    productId: 1,
     startDate: new Date('2024-01-01'),
     endDate: new Date('2025-12-31'),
   },
   {
     id: 2,
     name: 'Professional Plan',
-    price: 79.99,
+    price: 6699,
     billingPeriod: 'Monthly',
     minQty: 1,
+    productId: 1,
     startDate: new Date('2024-01-01'),
     endDate: new Date('2025-12-31'),
   },
   {
     id: 3,
     name: 'Enterprise Plan',
-    price: 199.99,
+    price: 16599,
     billingPeriod: 'Monthly',
     minQty: 5,
+    productId: 2,
     startDate: new Date('2024-01-01'),
     endDate: new Date('2025-12-31'),
   },
   {
     id: 4,
     name: 'Annual Starter',
-    price: 299.99,
+    price: 24999,
     billingPeriod: 'Yearly',
     minQty: 1,
+    productId: 2,
     startDate: new Date('2024-01-01'),
     endDate: new Date('2025-12-31'),
   },
   {
     id: 5,
-    name: 'Legacy Plan',
-    price: 19.99,
+    name: 'API Basic',
+    price: 4199,
     billingPeriod: 'Monthly',
     minQty: 1,
-    startDate: new Date('2023-01-01'),
-    endDate: new Date('2024-01-01'),
+    productId: 3,
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2025-12-31'),
+  },
+  {
+    id: 6,
+    name: 'API Premium',
+    price: 8299,
+    billingPeriod: 'Monthly',
+    minQty: 1,
+    productId: 3,
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2025-12-31'),
+  },
+  {
+    id: 7,
+    name: 'Support Monthly',
+    price: 8299,
+    billingPeriod: 'Monthly',
+    minQty: 1,
+    productId: 4,
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2025-12-31'),
+  },
+  {
+    id: 8,
+    name: 'Analytics Pro',
+    price: 1649,
+    billingPeriod: 'Monthly',
+    minQty: 1,
+    productId: 5,
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2025-12-31'),
   },
 ];
 
@@ -253,7 +288,7 @@ export const mockInvoices = [
   {
     id: 1,
     number: 'INV-001',
-    total: 79.99,
+    total: 6699,
     status: InvoiceStatus.PAID,
     createdAt: new Date('2024-06-01'),
     userId: 3,
@@ -262,7 +297,7 @@ export const mockInvoices = [
   {
     id: 2,
     number: 'INV-002',
-    total: 79.99,
+    total: 6699,
     status: InvoiceStatus.PAID,
     createdAt: new Date('2024-07-01'),
     userId: 3,
@@ -271,7 +306,7 @@ export const mockInvoices = [
   {
     id: 3,
     number: 'INV-003',
-    total: 79.99,
+    total: 6699,
     status: InvoiceStatus.CONFIRMED,
     createdAt: new Date('2024-08-01'),
     userId: 3,
@@ -280,7 +315,7 @@ export const mockInvoices = [
   {
     id: 4,
     number: 'INV-004',
-    total: 29.99,
+    total: 2499,
     status: InvoiceStatus.PAID,
     createdAt: new Date('2024-07-01'),
     userId: 4,
@@ -289,7 +324,7 @@ export const mockInvoices = [
   {
     id: 5,
     number: 'INV-005',
-    total: 29.99,
+    total: 2499,
     status: InvoiceStatus.CONFIRMED,
     createdAt: new Date('2024-08-01'),
     userId: 4,
@@ -298,7 +333,7 @@ export const mockInvoices = [
   {
     id: 6,
     number: 'INV-006',
-    total: 199.99,
+    total: 16599,
     status: InvoiceStatus.DRAFT,
     createdAt: new Date('2024-08-15'),
     userId: 5,
@@ -310,7 +345,13 @@ export const getUserById = (id) => mockUsers.find(u => u.id === id);
 
 export const getPlanById = (id) => mockPlans.find(p => p.id === id);
 
+export const getProductById = (id) => mockProducts.find(p => p.id === id);
+
 export const getSubscriptionById = (id) => mockSubscriptions.find(s => s.id === id);
+
+export const getPlansByProductId = (productId) => mockPlans.filter(p => p.productId === productId);
+
+export const getSubscriptionsByPlanId = (planId) => mockSubscriptions.filter(s => s.planId === planId);
 
 export const getSubscriptionsWithDetails = () =>
   mockSubscriptions.map(sub => ({

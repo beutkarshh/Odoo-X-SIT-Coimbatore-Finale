@@ -29,7 +29,7 @@ export default function PortalDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <StatCard title="Active Plan" value={activePlan?.name || 'No Active Plan'} icon={<CreditCard size={24} />} />
         <StatCard title="Next Billing Date" value={nextBillingDate} icon={<Calendar size={24} />} />
-        <StatCard title="Outstanding Amount" value={`$${outstandingAmount.toFixed(2)}`} icon={<FileText size={24} />} />
+        <StatCard title="Outstanding Amount" value={`₹${outstandingAmount.toFixed(0)}`} icon={<FileText size={24} />} />
       </div>
 
       {activeSubscription && activePlan && (
@@ -40,7 +40,7 @@ export default function PortalDashboard() {
               <div>
                 <h3 className="text-xl font-semibold text-foreground">{activePlan.name}</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  ${activePlan.price.toFixed(2)} / {activePlan.billingPeriod}
+                  ₹{activePlan.price.toFixed(0)} / {activePlan.billingPeriod}
                 </p>
               </div>
               <StatusBadge status={activeSubscription.status} />
@@ -80,7 +80,7 @@ export default function PortalDashboard() {
                 {invoices.slice(0, 5).map((invoice) => (
                   <tr key={invoice.id}>
                     <td className="font-medium text-foreground">{invoice.number}</td>
-                    <td>${invoice.total.toFixed(2)}</td>
+                    <td>₹{invoice.total.toFixed(0)}</td>
                     <td>{new Date(invoice.createdAt).toLocaleDateString()}</td>
                     <td>
                       <StatusBadge status={invoice.status} />

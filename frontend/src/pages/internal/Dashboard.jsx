@@ -2,7 +2,7 @@ import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { StatCard } from '../../components/ui/StatCard.jsx';
 import { getDashboardStats } from '../../data/mockData.js';
-import { Users, FileText, DollarSign } from 'lucide-react';
+import { Users, FileText, IndianRupee } from 'lucide-react';
 
 export default function InternalDashboard() {
   const stats = getDashboardStats();
@@ -14,7 +14,7 @@ export default function InternalDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard title="Active Subscriptions" value={stats.activeSubscriptions} icon={<Users size={24} />} />
         <StatCard title="Pending Invoices" value={stats.pendingInvoices} icon={<FileText size={24} />} />
-        <StatCard title="Monthly Revenue" value={`$${stats.monthlyRevenue.toFixed(2)}`} icon={<DollarSign size={24} />} />
+        <StatCard title="Monthly Revenue" value={`₹${stats.monthlyRevenue.toFixed(0)}`} icon={<IndianRupee size={24} />} />
       </div>
 
       <div className="mt-8">

@@ -17,9 +17,6 @@ import {
 const adminNavItems = [
   { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Products', path: '/admin/products', icon: Package },
-  { label: 'Plans', path: '/admin/plans', icon: CreditCard },
-  { label: 'Subscriptions', path: '/admin/subscriptions', icon: Users },
-  { label: 'Invoices', path: '/admin/invoices', icon: FileText },
 ];
 
 const internalNavItems = [

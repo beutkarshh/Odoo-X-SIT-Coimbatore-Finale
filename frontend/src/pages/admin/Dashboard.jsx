@@ -2,7 +2,7 @@ import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { StatCard } from '../../components/ui/StatCard.jsx';
 import { getDashboardStats } from '../../data/mockData.js';
-import { Package, Users, DollarSign, FileText } from 'lucide-react';
+import { Package, Users, IndianRupee, FileText } from 'lucide-react';
 
 export default function AdminDashboard() {
   const stats = getDashboardStats();
@@ -14,7 +14,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Products" value={stats.totalProducts} icon={<Package size={24} />} />
         <StatCard title="Active Subscriptions" value={stats.activeSubscriptions} icon={<Users size={24} />} />
-        <StatCard title="Monthly Revenue" value={`$${stats.monthlyRevenue.toFixed(2)}`} icon={<DollarSign size={24} />} />
+        <StatCard title="Monthly Revenue" value={`₹${stats.monthlyRevenue.toFixed(0)}`} icon={<IndianRupee size={24} />} />
         <StatCard title="Pending Invoices" value={stats.pendingInvoices} icon={<FileText size={24} />} />
       </div>
 

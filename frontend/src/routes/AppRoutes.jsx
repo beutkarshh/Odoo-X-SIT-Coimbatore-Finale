@@ -6,10 +6,9 @@ import Index from '../pages/Index.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
 import AdminDashboard from '../pages/admin/Dashboard.jsx';
-import AdminProducts from '../pages/admin/Products.jsx';
-import AdminPlans from '../pages/admin/Plans.jsx';
-import AdminSubscriptions from '../pages/admin/Subscriptions.jsx';
-import AdminInvoices from '../pages/admin/Invoices.jsx';
+import AdminProductsNew from '../pages/admin/ProductsNew.jsx';
+import AdminProductPlans from '../pages/admin/ProductPlans.jsx';
+import AdminPlanSubscribers from '../pages/admin/PlanSubscribers.jsx';
 
 import InternalDashboard from '../pages/internal/Dashboard.jsx';
 import InternalSubscriptions from '../pages/internal/Subscriptions.jsx';
@@ -54,31 +53,23 @@ export function AppRoutes() {
         path="/admin/products"
         element={
           <ProtectedRoute allowedRoles={[Role.ADMIN]}>
-            <AdminProducts />
+            <AdminProductsNew />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/admin/plans"
+        path="/admin/products/:productId/plans"
         element={
           <ProtectedRoute allowedRoles={[Role.ADMIN]}>
-            <AdminPlans />
+            <AdminProductPlans />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/admin/subscriptions"
+        path="/admin/products/:productId/plans/:planId/subscribers"
         element={
           <ProtectedRoute allowedRoles={[Role.ADMIN]}>
-            <AdminSubscriptions />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/invoices"
-        element={
-          <ProtectedRoute allowedRoles={[Role.ADMIN]}>
-            <AdminInvoices />
+            <AdminPlanSubscribers />
           </ProtectedRoute>
         }
       />

@@ -46,15 +46,15 @@ export default function AdminInvoices() {
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="stat-card">
-          <p className="stat-card-value">${totalAmount.toFixed(2)}</p>
-          <p className="stat-card-label">Total Invoiced</p>
+          <p className="stat-card-value">₹{totalAmount.toFixed(0)}</p>
+          <p className="stat-card-label">Total Amount</p>
         </div>
         <div className="stat-card">
-          <p className="stat-card-value text-success">${paidAmount.toFixed(2)}</p>
-          <p className="stat-card-label">Total Paid</p>
+          <p className="stat-card-value text-success">₹{paidAmount.toFixed(0)}</p>
+          <p className="stat-card-label">Paid</p>
         </div>
         <div className="stat-card">
-          <p className="stat-card-value text-warning-foreground">${(totalAmount - paidAmount).toFixed(2)}</p>
+          <p className="stat-card-value text-warning-foreground">₹{(totalAmount - paidAmount).toFixed(0)}</p>
           <p className="stat-card-label">Outstanding</p>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function AdminInvoices() {
                   <td className="font-medium text-foreground">{invoice.number}</td>
                   <td>{invoice.user?.name}</td>
                   <td>{invoice.subscription?.number}</td>
-                  <td>${invoice.total.toFixed(2)}</td>
+                  <td>₹{invoice.total.toFixed(0)}</td>
                   <td>{new Date(invoice.createdAt).toLocaleDateString()}</td>
                   <td>
                     <StatusBadge status={invoice.status} />
