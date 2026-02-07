@@ -75,6 +75,66 @@
     --table-row-hover: 220 14% 98%;
     --table-border: 220 13% 91%;
   }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 318 30% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 179 80% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 45 97% 56%;
+    --accent-foreground: 215 28% 17%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 97% 56%;
+    --warning-foreground: 215 28% 17%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 318 30% 55%;
+
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 318 30% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 318 30% 55%;
+    --sidebar-muted: 215 20% 50%;
+
+    --status-draft: 215 20% 50%;
+    --status-quotation: 199 89% 48%;
+    --status-confirmed: 45 97% 56%;
+    --status-active: 142 71% 45%;
+    --status-closed: 210 40% 80%;
+    --status-paid: 142 71% 45%;
+
+    --table-header: 217 33% 17%;
+    --table-row-hover: 217 33% 20%;
+    --table-border: 217 33% 22%;
+  }
 }
 
 @layer base {

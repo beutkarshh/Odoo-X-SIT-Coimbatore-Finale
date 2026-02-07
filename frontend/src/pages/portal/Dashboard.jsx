@@ -5,7 +5,7 @@ import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { getCustomerSubscriptions, getCustomerInvoices, getPlanById } from '../../data/mockData.js';
 import { SubscriptionStatus, InvoiceStatus } from '../../data/constants.js';
-import { CreditCard, FileText, Calendar } from 'lucide-react';
+import { CreditCard, FileText, Calendar, Clock } from 'lucide-react';
 
 export default function PortalDashboard() {
   const { user } = useAuth();
@@ -19,8 +19,39 @@ export default function PortalDashboard() {
   const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + i.total, 0);
 
   const nextBillingDate = activeSubscription
-    ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()
+    ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
     : 'N/A';
+
+  const formatDateTime = (date) => {
+    return new Date(date).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
 
   return (
     <Layout type="portal">
@@ -47,15 +78,15 @@ export default function PortalDashboard() {
             </div>
             <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Start Date</p>
+                <p className="text-xs text-muted-foreground">Start Date & Time</p>
                 <p className="text-sm font-medium text-foreground">
-                  {new Date(activeSubscription.startDate).toLocaleDateString()}
+                  {formatDateTime(activeSubscription.startDate)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">End Date</p>
                 <p className="text-sm font-medium text-foreground">
-                  {new Date(activeSubscription.endDate).toLocaleDateString()}
+                  {formatDate(activeSubscription.endDate)}
                 </p>
               </div>
             </div>
@@ -72,7 +103,8 @@ export default function PortalDashboard() {
                 <tr>
                   <th>Invoice</th>
                   <th>Amount</th>
-                  <th>Date</th>
+                  <th>Date & Time</th>
+                  <th>Paid At</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -81,7 +113,17 @@ export default function PortalDashboard() {
                   <tr key={invoice.id}>
                     <td className="font-medium text-foreground">{invoice.number}</td>
                     <td>₹{invoice.total.toFixed(0)}</td>
-                    <td>{new Date(invoice.createdAt).toLocaleDateString()}</td>
+                    <td className="text-sm">{formatDateTime(invoice.createdAt)}</td>
+                    <td className="text-sm">
+                      {invoice.paidAt ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <Clock size={14} />
+                          {formatTime(invoice.paidAt)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
                     <td>
                       <StatusBadge status={invoice.status} />
                     </td>
