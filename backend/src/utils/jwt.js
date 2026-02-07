@@ -8,6 +8,11 @@ const { env } = require('../config/env');
  * @returns {string} JWT token
  */
 function generateToken(payload, expiresIn = '7d') {
+  if (!env.JWT_SECRET) {
+    const err = new Error('Server misconfigured: JWT_SECRET is not set');
+    err.statusCode = 500;
+    throw err;
+  }
   return jwt.sign(payload, env.JWT_SECRET, { expiresIn });
 }
 
@@ -19,9 +24,16 @@ function generateToken(payload, expiresIn = '7d') {
  */
 function verifyToken(token) {
   try {
+    if (!env.JWT_SECRET) {
+      const err = new Error('Server misconfigured: JWT_SECRET is not set');
+      err.statusCode = 500;
+      throw err;
+    }
     return jwt.verify(token, env.JWT_SECRET);
   } catch (error) {
-    throw new Error('Invalid or expired token');
+    const err = new Error('Invalid or expired token');
+    err.statusCode = 401;
+    throw err;
   }
 }
 

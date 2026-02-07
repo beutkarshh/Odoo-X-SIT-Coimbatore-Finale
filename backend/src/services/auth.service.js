@@ -27,18 +27,24 @@ async function login(email, password) {
 
   // Check if user exists
   if (!user) {
-    throw new Error('Invalid email or password');
+    const err = new Error('Invalid email or password');
+    err.statusCode = 401;
+    throw err;
   }
 
   // Check if user is active
   if (!user.isActive) {
-    throw new Error('Account is inactive');
+    const err = new Error('Account is inactive');
+    err.statusCode = 403;
+    throw err;
   }
 
   // Verify password
   const isPasswordValid = await comparePassword(password, user.password);
   if (!isPasswordValid) {
-    throw new Error('Invalid email or password');
+    const err = new Error('Invalid email or password');
+    err.statusCode = 401;
+    throw err;
   }
 
   // Generate JWT token
@@ -76,7 +82,9 @@ async function getUserProfile(userId) {
   });
 
   if (!user) {
-    throw new Error('User not found');
+    const err = new Error('User not found');
+    err.statusCode = 404;
+    throw err;
   }
 
   return user;
