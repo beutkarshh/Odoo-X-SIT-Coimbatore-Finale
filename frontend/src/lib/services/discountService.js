@@ -118,4 +118,47 @@ export const discountService = {
       };
     }
   },
+
+  /**
+   * Validate a coupon code
+   * POST /api/discounts/validate-coupon
+   */
+  async validateCoupon(couponCode, amount) {
+    try {
+      const response = await api.post('/api/discounts/validate-coupon', {
+        couponCode,
+        amount,
+      });
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message || 'Invalid coupon code',
+        data: null,
+      };
+    }
+  },
+
+  /**
+   * Get available coupons for display
+   * GET /api/discounts/available-coupons
+   */
+  async getAvailableCoupons() {
+    try {
+      const response = await api.get('/api/discounts/available-coupons');
+      return {
+        success: true,
+        data: response.data.data || [],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch coupons',
+        data: [],
+      };
+    }
+  },
 };

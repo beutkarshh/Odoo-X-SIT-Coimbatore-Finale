@@ -185,6 +185,18 @@ model Invoice {
 	totalAmount   Decimal @db.Decimal(10, 2) @default(0)
 	total         Decimal @db.Decimal(10, 2) @default(0)
 
+	// Discount/Coupon tracking
+	couponCode      String?
+	discountPercent Decimal?  @db.Decimal(5, 2)
+	
+	// Tax breakdown
+	taxPercent      Decimal?  @db.Decimal(5, 2)
+	platformFee     Decimal   @db.Decimal(10, 2) @default(0)
+
+	// Link to discount used
+	discountId Int?
+	discount   Discount? @relation(fields: [discountId], references: [id], onDelete: SetNull)
+
 	dueDate       DateTime
 	paidAt        DateTime?
 	paymentMethod String?
@@ -204,6 +216,7 @@ model Invoice {
 
 	@@index([subscriptionId])
 	@@index([customerId])
+	@@index([discountId])
 	@@index([status])
 	@@index([dueDate])
 }
@@ -245,6 +258,7 @@ model Tax {
 model Discount {
 	id              Int          @id @default(autoincrement())
 	name            String
+	couponCode      String?      @unique
 	type            DiscountType @default(PERCENTAGE)
 	value           Decimal      @db.Decimal(10, 2)
 	minPurchase     Decimal?     @db.Decimal(10, 2)
@@ -257,7 +271,10 @@ model Discount {
 	createdAt       DateTime     @default(now())
 	updatedAt       DateTime     @updatedAt
 
+	invoices        Invoice[]
+
 	@@index([name])
+	@@index([couponCode])
 	@@index([startDate, endDate])
 }
 

@@ -116,27 +116,50 @@ export default function PortalInvoices() {
     });
   };
 
-  // Calculate invoice breakdown (reverse engineer from total)
-  const calculateBreakdown = (total) => {
-    // Assuming 10% discount, 18% GST, ₹99 platform fee
-    // total = (basePrice * 0.9) + (basePrice * 0.9 * 0.18) + 99
-    // total - 99 = basePrice * 0.9 * 1.18
-    // basePrice = (total - 99) / (0.9 * 1.18)
+  // Calculate invoice breakdown from invoice data or estimate
+  const calculateBreakdown = (invoice) => {
+    // If invoice has stored discount/tax info, use it
+    if (invoice.subtotal !== undefined && invoice.subtotal !== null) {
+      const basePrice = Number(invoice.subtotal || 0);
+      const discountAmount = Number(invoice.discountTotal || 0);
+      const discountPercent = Number(invoice.discountPercent || 0);
+      const taxAmount = Number(invoice.taxTotal || 0);
+      const taxPercent = Number(invoice.taxPercent || 18);
+      const platformFee = Number(invoice.platformFee || 99);
+      const total = Number(invoice.total || 0);
+      const priceAfterDiscount = basePrice - discountAmount;
+      
+      return {
+        basePrice,
+        discountPercent,
+        discountAmount,
+        priceAfterDiscount,
+        gstPercent: taxPercent,
+        gstAmount: taxAmount,
+        platformFee,
+        totalAmount: total,
+        couponCode: invoice.couponCode || null,
+      };
+    }
+    
+    // Fallback: estimate breakdown from total (legacy invoices)
+    const total = Number(invoice.total || invoice || 0);
     const withoutPlatformFee = total - 99;
     const priceAfterDiscount = withoutPlatformFee / 1.18;
-    const basePrice = priceAfterDiscount / 0.9;
-    const discountAmount = basePrice * 0.1;
+    const basePrice = priceAfterDiscount;
+    const discountAmount = 0;
     const gstAmount = priceAfterDiscount * 0.18;
     
     return {
       basePrice: Math.round(basePrice),
-      discountPercent: 10,
+      discountPercent: 0,
       discountAmount: Math.round(discountAmount),
       priceAfterDiscount: Math.round(priceAfterDiscount),
       gstPercent: 18,
       gstAmount: Math.round(gstAmount),
       platformFee: 99,
       totalAmount: total,
+      couponCode: null,
     };
   };
 
@@ -149,7 +172,7 @@ export default function PortalInvoices() {
     const subscription = invoice.subscription;
     const plan = subscription?.plan;
     const product = subscription?.lines?.[0]?.product;
-    const breakdown = calculateBreakdown(Number(invoice.total || 0));
+    const breakdown = calculateBreakdown(invoice);
 
     // Create PDF
     const doc = new jsPDF();
@@ -326,57 +349,80 @@ export default function PortalInvoices() {
 
     // Price breakdown box
     const boxX = pageWidth - 100;
+    const hasDiscount = breakdown.discountAmount > 0;
+    const boxHeight = hasDiscount ? 70 : 50; // Smaller box if no discount
+    
     doc.setFillColor(249, 250, 251);
-    doc.rect(boxX - 10, y - 5, 90, 70, 'F');
+    doc.rect(boxX - 10, y - 5, 90, boxHeight, 'F');
     doc.setDrawColor(229, 231, 235);
-    doc.rect(boxX - 10, y - 5, 90, 70, 'S');
+    doc.rect(boxX - 10, y - 5, 90, boxHeight, 'S');
 
     doc.setFont('helvetica', 'normal');
-    doc.text('Subtotal:', boxX, y + 3);
-    doc.text(formatCurrency(breakdown.basePrice), boxX + 70, y + 3, { align: 'right' });
+    let lineY = y + 3;
+    
+    doc.text('Subtotal:', boxX, lineY);
+    doc.text(formatCurrency(breakdown.basePrice), boxX + 70, lineY, { align: 'right' });
+    lineY += 9;
 
-    doc.setTextColor(22, 163, 74);
-    doc.text(`Discount (${breakdown.discountPercent}%):`, boxX, y + 12);
-    doc.text(`-${formatCurrency(breakdown.discountAmount)}`, boxX + 70, y + 12, { align: 'right' });
-    doc.setTextColor(0, 0, 0);
+    // Only show discount line if discount was applied
+    if (hasDiscount) {
+      doc.setTextColor(22, 163, 74);
+      if (breakdown.couponCode) {
+        doc.text(`Coupon (${breakdown.couponCode}):`, boxX, lineY);
+      } else if (breakdown.discountPercent > 0) {
+        doc.text(`Discount (${breakdown.discountPercent}%):`, boxX, lineY);
+      } else {
+        doc.text('Discount:', boxX, lineY);
+      }
+      doc.text(`-${formatCurrency(breakdown.discountAmount)}`, boxX + 70, lineY, { align: 'right' });
+      doc.setTextColor(0, 0, 0);
+      lineY += 5;
 
-    doc.setDrawColor(200, 200, 200);
-    doc.line(boxX, y + 17, boxX + 70, y + 17);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(boxX, lineY, boxX + 70, lineY);
+      lineY += 7;
 
-    doc.text('After Discount:', boxX, y + 24);
-    doc.text(formatCurrency(breakdown.priceAfterDiscount), boxX + 70, y + 24, { align: 'right' });
+      doc.text('After Discount:', boxX, lineY);
+      doc.text(formatCurrency(breakdown.priceAfterDiscount), boxX + 70, lineY, { align: 'right' });
+      lineY += 9;
+    }
 
-    doc.text('Platform Fee:', boxX, y + 33);
-    doc.text(formatCurrency(breakdown.platformFee), boxX + 70, y + 33, { align: 'right' });
+    doc.text('Platform Fee:', boxX, lineY);
+    doc.text(formatCurrency(breakdown.platformFee), boxX + 70, lineY, { align: 'right' });
+    lineY += 9;
 
-    doc.text(`GST (${breakdown.gstPercent}%):`, boxX, y + 42);
-    doc.text(formatCurrency(breakdown.gstAmount), boxX + 70, y + 42, { align: 'right' });
+    doc.text(`GST (${breakdown.gstPercent}%):`, boxX, lineY);
+    doc.text(formatCurrency(breakdown.gstAmount), boxX + 70, lineY, { align: 'right' });
+    lineY += 6;
 
     doc.setDrawColor(124, 58, 237);
     doc.setLineWidth(0.5);
-    doc.line(boxX, y + 48, boxX + 70, y + 48);
+    doc.line(boxX, lineY, boxX + 70, lineY);
+    lineY += 10;
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL:', boxX, y + 58);
+    doc.text('TOTAL:', boxX, lineY);
     doc.setTextColor(124, 58, 237);
-    doc.text(formatCurrency(breakdown.totalAmount), boxX + 70, y + 58, { align: 'right' });
+    doc.text(formatCurrency(breakdown.totalAmount), boxX + 70, lineY, { align: 'right' });
     doc.setTextColor(0, 0, 0);
 
-    // Savings box on left
-    doc.setFillColor(220, 252, 231);
-    doc.rect(20, y, 70, 25, 'F');
-    doc.setDrawColor(34, 197, 94);
-    doc.rect(20, y, 70, 25, 'S');
+    // Savings box on left - only show if discount was applied
+    if (hasDiscount) {
+      doc.setFillColor(220, 252, 231);
+      doc.rect(20, y, 70, 25, 'F');
+      doc.setDrawColor(34, 197, 94);
+      doc.rect(20, y, 70, 25, 'S');
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(22, 101, 52);
-    doc.text('You Saved', 55, y + 8, { align: 'center' });
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(formatCurrency(breakdown.discountAmount), 55, y + 19, { align: 'center' });
-    doc.setTextColor(0, 0, 0);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(22, 101, 52);
+      doc.text('You Saved', 55, y + 8, { align: 'center' });
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(formatCurrency(breakdown.discountAmount), 55, y + 19, { align: 'center' });
+      doc.setTextColor(0, 0, 0);
+    }
 
     y += 85;
 
@@ -616,7 +662,7 @@ export default function PortalInvoices() {
             const subscription = selectedInvoice.subscription;
             const plan = subscription?.plan;
             const product = subscription?.lines?.[0]?.product;
-            const breakdown = calculateBreakdown(Number(selectedInvoice.total || 0));
+            const breakdown = calculateBreakdown(selectedInvoice);
 
             return (
               <div className="mt-4">
@@ -751,19 +797,30 @@ export default function PortalInvoices() {
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="text-foreground">{formatCurrencyDisplay(breakdown.basePrice)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-green-600 flex items-center gap-1">
-                        <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-xs">
-                          -{breakdown.discountPercent}%
-                        </span>
-                        Discount Applied
-                      </span>
-                      <span className="text-green-600">-{formatCurrencyDisplay(breakdown.discountAmount)}</span>
-                    </div>
-                    <div className="border-t border-dashed border-border pt-3 flex justify-between text-sm">
-                      <span className="text-muted-foreground">Price After Discount</span>
-                      <span className="text-foreground font-medium">{formatCurrencyDisplay(breakdown.priceAfterDiscount)}</span>
-                    </div>
+                    {/* Only show discount if applied */}
+                    {breakdown.discountAmount > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-600 flex items-center gap-1">
+                            {breakdown.couponCode ? (
+                              <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-xs">
+                                {breakdown.couponCode}
+                              </span>
+                            ) : breakdown.discountPercent > 0 ? (
+                              <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-xs">
+                                -{breakdown.discountPercent}%
+                              </span>
+                            ) : null}
+                            Discount Applied
+                          </span>
+                          <span className="text-green-600">-{formatCurrencyDisplay(breakdown.discountAmount)}</span>
+                        </div>
+                        <div className="border-t border-dashed border-border pt-3 flex justify-between text-sm">
+                          <span className="text-muted-foreground">Price After Discount</span>
+                          <span className="text-foreground font-medium">{formatCurrencyDisplay(breakdown.priceAfterDiscount)}</span>
+                        </div>
+                      </>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Platform Fee</span>
                       <span className="text-foreground">{formatCurrencyDisplay(breakdown.platformFee)}</span>
@@ -782,23 +839,25 @@ export default function PortalInvoices() {
                   </div>
                 </div>
 
-                {/* Savings Summary */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 mb-6 border border-green-200 dark:border-green-800">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Original Price</p>
-                      <p className="text-lg line-through text-muted-foreground">{formatCurrencyDisplay(breakdown.basePrice)}</p>
-                    </div>
-                    <div className="text-center px-4">
-                      <p className="text-sm text-green-600 font-medium">You Saved</p>
-                      <p className="text-2xl font-bold text-green-600">{formatCurrencyDisplay(breakdown.discountAmount)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Total Paid</p>
-                      <p className="text-2xl font-bold text-foreground">{formatCurrencyDisplay(breakdown.totalAmount)}</p>
+                {/* Savings Summary - Only show when discount was applied */}
+                {breakdown.discountAmount > 0 && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 mb-6 border border-green-200 dark:border-green-800">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Original Price</p>
+                        <p className="text-lg line-through text-muted-foreground">{formatCurrencyDisplay(breakdown.basePrice)}</p>
+                      </div>
+                      <div className="text-center px-4">
+                        <p className="text-sm text-green-600 font-medium">You Saved</p>
+                        <p className="text-2xl font-bold text-green-600">{formatCurrencyDisplay(breakdown.discountAmount)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Total Paid</p>
+                        <p className="text-2xl font-bold text-foreground">{formatCurrencyDisplay(breakdown.totalAmount)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">

@@ -5,16 +5,17 @@ export const purchaseService = {
    * Purchase a subscription plan (Portal users only)
    * POST /api/purchase
    */
-  purchasePlan: async ({ planId, productId, paymentMethod }) => {
+  purchasePlan: async ({ planId, productId, paymentMethod, couponCode }) => {
     try {
       const response = await api.post('/api/purchase', {
         planId,
         productId,
         paymentMethod,
+        couponCode,
       });
       return {
         success: true,
-        data: response.data,
+        data: response.data.data || response.data,
         message: response.data.message || 'Purchase completed successfully',
       };
     } catch (error) {

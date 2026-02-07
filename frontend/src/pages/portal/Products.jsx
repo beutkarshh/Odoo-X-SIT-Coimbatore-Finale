@@ -5,9 +5,10 @@ import { Button } from '../../components/ui/Button.jsx';
 import { productService } from '../../lib/services/productService.js';
 import { planService } from '../../lib/services/planService.js';
 import { purchaseService } from '../../lib/services/purchaseService.js';
+import { discountService } from '../../lib/services/discountService.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
-import { Package, Layers, CreditCard, CheckCircle, AlertCircle, FileText, Download, X, ArrowLeft, Search, Smartphone, Building2, ChevronRight } from 'lucide-react';
+import { Package, Layers, CreditCard, CheckCircle, AlertCircle, FileText, Download, X, ArrowLeft, Search, Smartphone, Building2, ChevronRight, Tag, Loader2 } from 'lucide-react';
 import { SearchFilter } from '../../components/SearchFilter.jsx';
 import { ProductCardSkeleton, GridSkeleton } from '../../components/LoadingSkeleton.jsx';
 import { NoProductsFound } from '../../components/EmptyState.jsx';
@@ -113,35 +114,100 @@ export default function PortalProducts() {
     setFilteredProducts(filtered);
   }, []);
   
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+
   // Invoice calculation constants
-  const DISCOUNT_PERCENT = 10;
   const GST_PERCENT = 18;
   const PLATFORM_FEE = 99;
 
-  // Calculate invoice amounts
-  const calculateInvoice = (plan) => {
+  // Calculate invoice amounts with coupon
+  const calculateInvoice = (plan, coupon = null) => {
     if (!plan) return null;
     
-    const basePrice = plan.price;
-    const discountAmount = (basePrice * DISCOUNT_PERCENT) / 100;
+    const basePrice = Number(plan.price || 0);
+    let discountAmount = 0;
+    let discountPercent = 0;
+    
+    if (coupon) {
+      if (coupon.type === 'PERCENTAGE') {
+        discountPercent = Number(coupon.value);
+        discountAmount = (basePrice * discountPercent) / 100;
+      } else {
+        discountAmount = Math.min(Number(coupon.value), basePrice);
+        discountPercent = (discountAmount / basePrice) * 100;
+      }
+    }
+    
     const priceAfterDiscount = basePrice - discountAmount;
     const gstAmount = (priceAfterDiscount * GST_PERCENT) / 100;
-    const totalBeforeTax = priceAfterDiscount;
     const totalAmount = priceAfterDiscount + gstAmount + PLATFORM_FEE;
     const savedAmount = discountAmount;
 
     return {
       basePrice,
-      discountPercent: DISCOUNT_PERCENT,
-      discountAmount,
-      priceAfterDiscount,
+      discountPercent: Math.round(discountPercent * 100) / 100,
+      discountAmount: Math.round(discountAmount * 100) / 100,
+      priceAfterDiscount: Math.round(priceAfterDiscount * 100) / 100,
       gstPercent: GST_PERCENT,
-      gstAmount,
+      gstAmount: Math.round(gstAmount * 100) / 100,
       platformFee: PLATFORM_FEE,
-      totalBeforeTax,
       totalAmount: Math.round(totalAmount),
-      savedAmount,
+      savedAmount: Math.round(savedAmount * 100) / 100,
+      couponCode: coupon?.couponCode || null,
+      couponName: coupon?.name || null,
     };
+  };
+
+  // Apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+    
+    setCouponLoading(true);
+    setCouponError('');
+    
+    const result = await discountService.validateCoupon(
+      couponCode.trim(),
+      Number(selectedPlan?.price || 0)
+    );
+    
+    if (result.success && result.data) {
+      setAppliedCoupon(result.data);
+      setCouponError('');
+    } else {
+      setCouponError(result.message || 'Invalid coupon code');
+      setAppliedCoupon(null);
+    }
+    
+    setCouponLoading(false);
+  };
+
+  // Remove coupon
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
+
+  // Load available coupons when invoice preview opens
+  useEffect(() => {
+    if (isInvoicePreviewOpen) {
+      loadAvailableCoupons();
+    }
+  }, [isInvoicePreviewOpen]);
+
+  const loadAvailableCoupons = async () => {
+    const result = await discountService.getAvailableCoupons();
+    if (result.success) {
+      setAvailableCoupons(result.data);
+    }
   };
 
   const handleProductClick = async (product) => {
@@ -165,6 +231,10 @@ export default function PortalProducts() {
   const handlePayNow = (plan) => {
     setSelectedPlan(plan);
     setIsPlansModalOpen(false);
+    // Reset coupon state
+    setCouponCode('');
+    setAppliedCoupon(null);
+    setCouponError('');
     // Generate invoice number once when opening the preview
     const timestamp = Date.now();
     setPreviewInvoiceNumber(`INV-${timestamp.toString().slice(-6)}`);
@@ -192,6 +262,10 @@ export default function PortalProducts() {
     setIsInvoicePreviewOpen(false);
     setIsPaymentModalOpen(false);
     setSelectedPlan(null);
+    // Reset coupon
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
     setPaymentStatus(null);
     setPaymentMethod('card');
     setSelectedUPIApp(null);
@@ -204,18 +278,20 @@ export default function PortalProducts() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
-      // Call the purchase API
+      // Call the purchase API with coupon code
       const result = await purchaseService.purchasePlan({
         planId: selectedPlan.id,
         productId: selectedProduct.id,
         paymentMethod: paymentMethod,
+        couponCode: appliedCoupon?.couponCode || null,
       });
       
       if (result.success && result.data) {
-        const invoiceData = calculateInvoice(selectedPlan);
+        // Use breakdown from API response if available, otherwise calculate locally
+        const breakdown = result.data.breakdown || calculateInvoice(selectedPlan, appliedCoupon);
         setGeneratedInvoice({ 
           ...result.data.invoice, 
-          ...invoiceData, 
+          ...breakdown, 
           plan: selectedPlan, 
           product: selectedProduct 
         });
@@ -277,15 +353,19 @@ export default function PortalProducts() {
   const getSubscriptionDates = (plan) => {
     const startDate = new Date();
     const endDate = new Date();
-    if (plan?.billingPeriod === 'Monthly') {
+    if (plan?.billingPeriod === 'MONTHLY' || plan?.billingPeriod === 'Monthly') {
       endDate.setMonth(endDate.getMonth() + 1);
+    } else if (plan?.billingPeriod === 'WEEKLY' || plan?.billingPeriod === 'Weekly') {
+      endDate.setDate(endDate.getDate() + 7);
+    } else if (plan?.billingPeriod === 'DAILY' || plan?.billingPeriod === 'Daily') {
+      endDate.setDate(endDate.getDate() + 1);
     } else {
       endDate.setFullYear(endDate.getFullYear() + 1);
     }
     return { startDate, endDate };
   };
 
-  const invoiceCalc = calculateInvoice(selectedPlan);
+  const invoiceCalc = calculateInvoice(selectedPlan, appliedCoupon);
   const subDates = getSubscriptionDates(selectedPlan);
 
   return (
@@ -540,6 +620,89 @@ export default function PortalProducts() {
                 </div>
               </div>
 
+              {/* Coupon Code Section */}
+              <div className="bg-card border border-border rounded-lg overflow-hidden mb-6">
+                <div className="bg-muted/50 px-4 py-3 border-b border-border">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <Tag size={16} className="text-primary" />
+                    Apply Coupon
+                  </h3>
+                </div>
+                <div className="p-4">
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <div>
+                          <p className="font-medium text-green-700 dark:text-green-400">
+                            {appliedCoupon.couponCode}
+                          </p>
+                          <p className="text-xs text-green-600">
+                            {appliedCoupon.name} - {appliedCoupon.type === 'PERCENTAGE' 
+                              ? `${appliedCoupon.value}% off` 
+                              : `₹${appliedCoupon.value} off`}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveCoupon}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X size={16} />
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          placeholder="Enter coupon code"
+                          className="flex-1 px-3 py-2 bg-background border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        <Button
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponCode.trim()}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          {couponLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            'Apply'
+                          )}
+                        </Button>
+                      </div>
+                      {couponError && (
+                        <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
+                          <AlertCircle size={14} />
+                          {couponError}
+                        </p>
+                      )}
+                      {availableCoupons.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs text-muted-foreground mb-2">Available Coupons:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {availableCoupons.slice(0, 3).map((coupon) => (
+                              <button
+                                key={coupon.id}
+                                onClick={() => setCouponCode(coupon.couponCode)}
+                                className="px-2 py-1 text-xs bg-muted hover:bg-primary/10 border border-dashed border-primary/50 rounded-md text-primary font-medium transition-colors"
+                              >
+                                {coupon.couponCode}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Price Breakdown */}
               <div className="bg-card border border-border rounded-lg overflow-hidden mb-6">
                 <div className="bg-muted/50 px-4 py-3 border-b border-border">
@@ -550,19 +713,26 @@ export default function PortalProducts() {
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="text-foreground">{formatCurrency(invoiceCalc.basePrice)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-green-600 flex items-center gap-1">
-                      <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-xs">
-                        -{invoiceCalc.discountPercent}%
-                      </span>
-                      Discount Applied
-                    </span>
-                    <span className="text-green-600">-{formatCurrency(invoiceCalc.discountAmount)}</span>
-                  </div>
-                  <div className="border-t border-dashed border-border pt-3 flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price After Discount</span>
-                    <span className="text-foreground font-medium">{formatCurrency(invoiceCalc.priceAfterDiscount)}</span>
-                  </div>
+                  {/* Only show discount if coupon is applied */}
+                  {appliedCoupon && invoiceCalc.discountAmount > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-600 flex items-center gap-1">
+                          <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-xs">
+                            {appliedCoupon.couponCode}
+                          </span>
+                          {appliedCoupon.type === 'PERCENTAGE' 
+                            ? `-${invoiceCalc.discountPercent}%` 
+                            : 'Flat Off'}
+                        </span>
+                        <span className="text-green-600">-{formatCurrency(invoiceCalc.discountAmount)}</span>
+                      </div>
+                      <div className="border-t border-dashed border-border pt-3 flex justify-between text-sm">
+                        <span className="text-muted-foreground">Price After Discount</span>
+                        <span className="text-foreground font-medium">{formatCurrency(invoiceCalc.priceAfterDiscount)}</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Platform Fee</span>
                     <span className="text-foreground">{formatCurrency(invoiceCalc.platformFee)}</span>
@@ -582,6 +752,7 @@ export default function PortalProducts() {
               </div>
 
               {/* Savings Summary */}
+              {appliedCoupon && invoiceCalc.savedAmount > 0 ? (
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 mb-6 border border-green-200 dark:border-green-800">
                 <div className="flex items-center justify-between">
                   <div>
@@ -598,6 +769,13 @@ export default function PortalProducts() {
                   </div>
                 </div>
               </div>
+              ) : (
+              <div className="bg-muted/30 rounded-lg p-4 mb-6">
+                <p className="text-sm text-center text-muted-foreground">
+                  💡 Apply a coupon code above to get a discount on your purchase!
+                </p>
+              </div>
+              )}
 
               {/* Terms & Conditions */}
               <div className="text-xs text-muted-foreground mb-6 p-3 bg-muted/30 rounded-lg">
@@ -771,15 +949,21 @@ export default function PortalProducts() {
                       <p className="text-sm text-muted-foreground">Paying for:</p>
                       <p className="font-semibold text-foreground">{selectedPlan.name}</p>
                     </div>
-                    <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full">
-                      {invoiceCalc.discountPercent}% OFF
-                    </span>
+                    {appliedCoupon && invoiceCalc.discountPercent > 0 && (
+                      <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full">
+                        {invoiceCalc.discountPercent}% OFF
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-baseline gap-2 mt-2">
                     <span className="text-2xl font-bold text-primary">{formatCurrency(invoiceCalc.totalAmount)}</span>
-                    <span className="text-sm line-through text-muted-foreground">{formatCurrency(invoiceCalc.basePrice)}</span>
+                    {appliedCoupon && invoiceCalc.savedAmount > 0 && (
+                      <span className="text-sm line-through text-muted-foreground">{formatCurrency(invoiceCalc.basePrice)}</span>
+                    )}
                   </div>
-                  <p className="text-xs text-green-600 mt-1">You save {formatCurrency(invoiceCalc.savedAmount)}!</p>
+                  {appliedCoupon && invoiceCalc.savedAmount > 0 && (
+                    <p className="text-xs text-green-600 mt-1">You save {formatCurrency(invoiceCalc.savedAmount)}!</p>
+                  )}
                 </div>
               )}
 

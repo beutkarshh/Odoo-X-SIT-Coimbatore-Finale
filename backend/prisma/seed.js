@@ -120,11 +120,12 @@ async function main() {
   // 4. Seed Discounts
   // ========================================
   const discounts = [
-    { name: 'Early Bird 20%', type: 'PERCENTAGE', value: 20.0, startDate: new Date('2026-01-01'), endDate: new Date('2026-12-31'), minPurchase: 100.0, isActive: true },
-    { name: 'Loyalty Discount 15%', type: 'PERCENTAGE', value: 15.0, startDate: new Date('2026-01-01'), endDate: null, minPurchase: 200.0, isActive: true },
-    { name: 'New Customer 10%', type: 'PERCENTAGE', value: 10.0, startDate: new Date('2026-01-01'), endDate: new Date('2026-06-30'), minPurchase: 50.0, isActive: true },
-    { name: 'Flat $100 Off', type: 'FIXED', value: 100.0, startDate: new Date('2026-01-01'), endDate: new Date('2026-12-31'), minPurchase: 500.0, usageLimit: 100, isActive: true },
-    { name: 'VIP Discount 25%', type: 'PERCENTAGE', value: 25.0, startDate: new Date('2026-01-01'), endDate: null, minPurchase: 1000.0, isActive: true },
+    { name: 'Early Bird 20%', couponCode: 'EARLY20', type: 'PERCENTAGE', value: 20.0, startDate: new Date('2026-01-01'), endDate: new Date('2026-12-31'), minPurchase: 100.0, isActive: true },
+    { name: 'Loyalty Discount 15%', couponCode: 'LOYAL15', type: 'PERCENTAGE', value: 15.0, startDate: new Date('2026-01-01'), endDate: null, minPurchase: 200.0, isActive: true },
+    { name: 'New Customer 10%', couponCode: 'NEWUSER10', type: 'PERCENTAGE', value: 10.0, startDate: new Date('2026-01-01'), endDate: new Date('2026-06-30'), minPurchase: 50.0, isActive: true },
+    { name: 'Flat ₹100 Off', couponCode: 'FLAT100', type: 'FIXED', value: 100.0, startDate: new Date('2026-01-01'), endDate: new Date('2026-12-31'), minPurchase: 500.0, usageLimit: 100, isActive: true },
+    { name: 'VIP Discount 25%', couponCode: 'VIP25', type: 'PERCENTAGE', value: 25.0, startDate: new Date('2026-01-01'), endDate: null, minPurchase: 1000.0, isActive: true },
+    { name: 'Welcome Offer', couponCode: 'WELCOME', type: 'PERCENTAGE', value: 5.0, startDate: new Date('2026-01-01'), endDate: null, minPurchase: 0, isActive: true },
   ];
 
   const createdDiscounts = [];

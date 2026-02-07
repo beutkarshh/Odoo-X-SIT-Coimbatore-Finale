@@ -7,6 +7,17 @@ const router = express.Router();
 
 // All discount routes require authentication and ADMIN role
 const adminOnly = [authenticateToken, authorizeRoles('ADMIN')];
+const allAuthenticated = [authenticateToken];
+
+/**
+ * POST /api/discounts/validate-coupon (Any authenticated user)
+ */
+router.post('/validate-coupon', ...allAuthenticated, discountController.validateCoupon);
+
+/**
+ * GET /api/discounts/available-coupons (Any authenticated user)
+ */
+router.get('/available-coupons', ...allAuthenticated, discountController.getAvailableCoupons);
 
 /**
  * GET /api/discounts

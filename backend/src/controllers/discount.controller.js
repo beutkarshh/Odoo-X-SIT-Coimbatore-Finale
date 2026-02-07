@@ -72,6 +72,33 @@ async function deleteDiscount(req, res, next) {
   }
 }
 
+/**
+ * POST /api/discounts/validate-coupon
+ * Validate a coupon code
+ */
+async function validateCoupon(req, res, next) {
+  try {
+    const { couponCode, amount } = req.body;
+    const result = await discountService.validateCoupon(couponCode, parseFloat(amount) || 0);
+    return res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/discounts/available-coupons
+ * Get list of available coupons for users
+ */
+async function getAvailableCoupons(req, res, next) {
+  try {
+    const coupons = await discountService.getAvailableCoupons();
+    return res.status(200).json({ success: true, data: coupons });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getAllDiscounts,
   getActiveDiscounts,
@@ -79,4 +106,6 @@ module.exports = {
   createDiscount,
   updateDiscount,
   deleteDiscount,
+  validateCoupon,
+  getAvailableCoupons,
 };

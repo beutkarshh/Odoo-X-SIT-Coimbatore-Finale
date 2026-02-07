@@ -2,7 +2,7 @@ const purchaseService = require('../services/purchase.service');
 
 async function purchasePlan(req, res, next) {
 	try {
-		const { planId, productId, paymentMethod } = req.body;
+		const { planId, productId, paymentMethod, couponCode } = req.body;
 		const userId = req.user.userId;
 
 		const result = await purchaseService.purchasePlan({
@@ -10,12 +10,17 @@ async function purchasePlan(req, res, next) {
 			planId,
 			productId,
 			paymentMethod,
+			couponCode,
 		});
 
 		res.status(201).json({
+			success: true,
 			message: 'Purchase completed successfully',
-			subscription: result.subscription,
-			invoice: result.invoice,
+			data: {
+				subscription: result.subscription,
+				invoice: result.invoice,
+				breakdown: result.breakdown,
+			},
 		});
 	} catch (error) {
 		next(error);
