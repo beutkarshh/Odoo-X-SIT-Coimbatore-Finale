@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 
 const { errorMiddleware } = require('./middlewares/error.middleware');
+const authRoutes = require('./routes/auth.routes');
 
 function createApp() {
 	const app = express();
@@ -19,6 +20,9 @@ function createApp() {
 	app.get('/', (_req, res) => {
 		res.json({ ok: true, message: 'Subscription Management API' });
 	});
+
+	// API Routes
+	app.use('/api/auth', authRoutes);
 
 	// 404
 	app.use((_req, res) => {
