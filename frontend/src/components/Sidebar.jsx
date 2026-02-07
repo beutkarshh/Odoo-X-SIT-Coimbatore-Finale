@@ -18,6 +18,7 @@ import {
 const adminNavItems = [
   { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Products', path: '/admin/products', icon: Package },
+  { label: 'Users', path: '/admin/users', icon: Users },
 ];
 
 const internalNavItems = [

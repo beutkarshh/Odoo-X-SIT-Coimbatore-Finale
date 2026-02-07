@@ -11,6 +11,7 @@ import AdminProductPlans from '../pages/admin/ProductPlans.jsx';
 import AdminPlanSubscribers from '../pages/admin/PlanSubscribers.jsx';
 import AdminSubscriptions from '../pages/admin/Subscriptions.jsx';
 import AdminInvoices from '../pages/admin/Invoices.jsx';
+import AdminUsers from '../pages/admin/Users.jsx';
 
 import InternalDashboard from '../pages/internal/Dashboard.jsx';
 import InternalSubscriptions from '../pages/internal/Subscriptions.jsx';
@@ -88,6 +89,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={[Role.ADMIN]}>
             <AdminInvoices />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={[Role.ADMIN]}>
+            <AdminUsers />
           </ProtectedRoute>
         }
       />

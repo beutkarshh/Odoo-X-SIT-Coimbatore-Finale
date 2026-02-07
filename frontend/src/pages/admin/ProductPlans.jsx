@@ -1,20 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
-import { getProductById, getPlansByProductId, getSubscriptionsByPlanId } from '../../data/mockData.js';
-import { ArrowLeft, Search, Calendar, Users, ArrowRight } from 'lucide-react';
-import { Button } from '../../components/ui/button.tsx';
-import { Input } from '../../components/ui/input.tsx';
+import { productService } from '../../lib/services/productService.js';
+import { planService } from '../../lib/services/planService.js';
+import { subscriptionService } from '../../lib/services/subscriptionService.js';
+import { ArrowLeft, Search, Calendar, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { Button } from '../../components/ui/Button.jsx';
+import { Input } from '../../components/ui/Input.jsx';
+import { useToast } from '../../hooks/use-toast';
 
 export default function ProductPlans() {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [billingFilter, setBillingFilter] = useState('All');
+  const [product, setProduct] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const product = getProductById(Number(productId));
-  const plans = getPlansByProductId(Number(productId));
+  useEffect(() => {
+    loadData();
+  }, [productId]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load product
+      const productResult = await productService.getById(productId);
+      if (!productResult.success) {
+        toast({
+          title: 'Error',
+          description: 'Product not found',
+          variant: 'destructive'
+        });
+        return;
+      }
+      setProduct(productResult.data);
+
+      // Load plans for this product
+      const plansResult = await planService.getAll();
+      if (plansResult.success && Array.isArray(plansResult.data)) {
+        const productPlans = plansResult.data.filter(p => p.productId === parseInt(productId));
+        setPlans(productPlans);
+      } else {
+        setPlans([]);
+      }
+
+      // Load all subscriptions to count subscribers per plan
+      const subsResult = await subscriptionService.getAll();
+      if (subsResult.success && Array.isArray(subsResult.data)) {
+        setSubscriptions(subsResult.data);
+      } else {
+        setSubscriptions([]);
+      }
+    } catch (error) {
+      setPlans([]);
+      setSubscriptions([]);
+      toast({
+        title: 'Error',
+        description: 'Failed to load data',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!product) {
     return (
@@ -42,6 +97,11 @@ export default function ProductPlans() {
 
   const handlePlanClick = (planId) => {
     navigate(`/admin/products/${productId}/plans/${planId}/subscribers`);
+  };
+
+  // Get subscriber count for a plan
+  const getSubscriberCount = (planId) => {
+    return subscriptions.filter(sub => sub.planId === planId).length;
   };
 
   return (
@@ -93,7 +153,7 @@ export default function ProductPlans() {
       {/* Plans List */}
       <div className="space-y-4">
         {filteredPlans.map(plan => {
-          const subscriptionsCount = getSubscriptionsByPlanId(plan.id).length;
+          const subscriptionsCount = getSubscriberCount(plan.id);
           
           return (
             <div
@@ -120,8 +180,8 @@ export default function ProductPlans() {
                 {/* Pricing */}
                 <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-primary">₹{plan.price.toFixed(0)}</div>
-                    <div className="text-sm text-muted-foreground">per {plan.billingPeriod.toLowerCase()}</div>
+                    <div className="text-3xl font-bold text-primary">₹{plan.price?.toFixed(0) || '0'}</div>
+                    <div className="text-sm text-muted-foreground">per {plan.billingPeriod?.toLowerCase() || 'period'}</div>
                   </div>
 
                   {/* Subscribers Count */}

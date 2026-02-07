@@ -8,14 +8,16 @@ export const userService = {
   getAll: async () => {
     try {
       const response = await api.get('/api/users');
+      // Backend returns: { success: true, data: { page, pageSize, total, items: [...] } }
+      const result = response.data.data || response.data;
       return {
         success: true,
-        data: response.data.users || response.data,
+        data: result.items || result || [],
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch users',
+        message: error.response?.data?.message || error.message || 'Failed to fetch users',
         data: [],
       };
     }
@@ -28,15 +30,16 @@ export const userService = {
   create: async (userData) => {
     try {
       const response = await api.post('/api/users', userData);
+      // Backend returns: { success: true, data: user }
       return {
         success: true,
-        data: response.data.user || response.data,
+        data: response.data.data || response.data,
         message: 'User created successfully',
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to create user',
+        message: error.response?.data?.message || error.message || 'Failed to create user',
       };
     }
   },

@@ -1,30 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
-import { mockProducts, getPlansByProductId } from '../../data/mockData.js';
-import { Package, Search, ArrowRight } from 'lucide-react';
-import { Button } from '../../components/ui/button.tsx';
-import { Input } from '../../components/ui/input.tsx';
+import { productService } from '../../lib/services/productService.js';
+import { planService } from '../../lib/services/planService.js';
+import { Package, Search, ArrowRight, Loader2 } from 'lucide-react';
+import { Button } from '../../components/ui/Button.jsx';
+import { Input } from '../../components/ui/Input.jsx';
+import { useToast } from '../../hooks/use-toast';
 
 export default function ProductsNew() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
+  const [products, setProducts] = useState([]);
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      const [productsResult, plansResult] = await Promise.all([
+        productService.getAll(),
+        planService.getAll()
+      ]);
+
+      if (productsResult.success && Array.isArray(productsResult.data)) {
+        setProducts(productsResult.data);
+      } else {
+        setProducts([]);
+      }
+      
+      if (plansResult.success && Array.isArray(plansResult.data)) {
+        setPlans(plansResult.data);
+      } else {
+        setPlans([]);
+      }
+    } catch (error) {
+      setProducts([]);
+      setPlans([]);
+      toast({
+        title: 'Error',
+        description: 'Failed to load products',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout type="admin">
+        <PageHeader title="Products" />
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   // Get unique product types
-  const productTypes = ['All', ...new Set(mockProducts.map(p => p.type))];
+  const productTypes = ['All', ...new Set((products || []).map(p => p.type).filter(Boolean))];
 
   // Filter products based on search and type
-  const filteredProducts = mockProducts.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.type.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredProducts = (products || []).filter(product => {
+    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.type?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'All' || product.type === typeFilter;
     return matchesSearch && matchesType;
   });
 
   const handleProductClick = (productId) => {
     navigate(`/admin/products/${productId}/plans`);
+  };
+
+  const getPlanCount = (productId) => {
+    return plans.filter(p => p.productId === productId).length;
   };
 
   return (
@@ -62,7 +120,7 @@ export default function ProductsNew() {
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map(product => {
-          const plansCount = getPlansByProductId(product.id).length;
+          const plansCount = getPlanCount(product.id);
           
           return (
             <div
@@ -78,20 +136,22 @@ export default function ProductsNew() {
               {/* Product Info */}
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-foreground mb-2">{product.name}</h3>
-                <span className="inline-block px-3 py-1 bg-muted rounded-full text-xs font-medium text-muted-foreground">
-                  {product.type}
-                </span>
+                {product.type && (
+                  <span className="inline-block px-3 py-1 bg-muted rounded-full text-xs font-medium text-muted-foreground">
+                    {product.type}
+                  </span>
+                )}
               </div>
 
               {/* Pricing */}
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Sale Price</span>
-                  <span className="text-lg font-semibold text-foreground">₹{product.salePrice.toFixed(0)}</span>
+                  <span className="text-lg font-semibold text-foreground">₹{product.salesPrice?.toFixed(0) || '0'}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Cost Price</span>
-                  <span className="text-sm font-medium text-muted-foreground">₹{product.costPrice.toFixed(0)}</span>
+                  <span className="text-sm font-medium text-muted-foreground">₹{product.costPrice?.toFixed(0) || '0'}</span>
                 </div>
               </div>
 

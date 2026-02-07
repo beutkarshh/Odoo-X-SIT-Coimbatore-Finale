@@ -1,22 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
-import { getPlanById, getSubscriptionsByPlanId, getUserById } from '../../data/mockData.js';
-import { ArrowLeft, Search, User, Mail, Calendar, Activity } from 'lucide-react';
-import { Button } from '../../components/ui/button.tsx';
-import { Input } from '../../components/ui/input.tsx';
+import { planService } from '../../lib/services/planService.js';
+import { subscriptionService } from '../../lib/services/subscriptionService.js';
+import { ArrowLeft, Search, User, Mail, Calendar, Activity, Loader2 } from 'lucide-react';
+import { Button } from '../../components/ui/Button.jsx';
+import { Input } from '../../components/ui/Input.jsx';
 import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { SubscriptionStatus } from '../../data/constants.js';
+import { useToast } from '../../hooks/use-toast';
 
 export default function PlanSubscribers() {
   const { productId, planId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [plan, setPlan] = useState(null);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const plan = getPlanById(Number(planId));
-  const subscriptions = getSubscriptionsByPlanId(Number(planId));
+  useEffect(() => {
+    loadData();
+  }, [planId]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load plan
+      const planResult = await planService.getById(planId);
+      if (!planResult.success) {
+        toast({
+          title: 'Error',
+          description: 'Plan not found',
+          variant: 'destructive'
+        });
+        return;
+      }
+      setPlan(planResult.data);
+
+      // Load subscriptions
+      const subsResult = await subscriptionService.getAll();
+      if (subsResult.success && Array.isArray(subsResult.data)) {
+        const planSubscriptions = subsResult.data.filter(s => s.planId === parseInt(planId));
+        setSubscriptions(planSubscriptions);
+      } else {
+        setSubscriptions([]);
+      }
+    } catch (error) {
+      setSubscriptions([]);
+      toast({
+        title: 'Error',
+        description: 'Failed to load data',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout type="admin">
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!plan) {
     return (
@@ -32,20 +86,14 @@ export default function PlanSubscribers() {
     );
   }
 
-  // Get subscriptions with user details
-  const subscriptionsWithDetails = subscriptions.map(sub => ({
-    ...sub,
-    user: getUserById(sub.userId)
-  }));
-
   // Get unique statuses
   const statuses = ['All', ...Object.values(SubscriptionStatus)];
 
   // Filter subscriptions
-  const filteredSubscriptions = subscriptionsWithDetails.filter(subscription => {
-    const matchesSearch = subscription.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         subscription.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         subscription.number.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredSubscriptions = subscriptions.filter(subscription => {
+    const matchesSearch = subscription.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         subscription.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         subscription.subscriptionNo?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || subscription.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -142,15 +190,15 @@ export default function PlanSubscribers() {
                   <User size={24} className="text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-foreground mb-1">{subscription.user?.name || 'Unknown User'}</h4>
+                  <h4 className="font-semibold text-foreground mb-1">{subscription.customer?.name || 'Unknown User'}</h4>
                   <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Mail size={14} />
-                      <span className="truncate">{subscription.user?.email || 'N/A'}</span>
+                      <span className="truncate">{subscription.customer?.email || 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Activity size={14} />
-                      <span>{subscription.number}</span>
+                      <span>{subscription.subscriptionNo}</span>
                     </div>
                   </div>
                 </div>
@@ -165,12 +213,14 @@ export default function PlanSubscribers() {
                     {new Date(subscription.startDate).toLocaleDateString()}
                   </div>
                 </div>
-                <div className="text-sm">
-                  <div className="text-muted-foreground">End Date</div>
-                  <div className="font-medium text-foreground">
-                    {new Date(subscription.endDate).toLocaleDateString()}
+                {subscription.expirationDate && (
+                  <div className="text-sm">
+                    <div className="text-muted-foreground">Expiration</div>
+                    <div className="font-medium text-foreground">
+                      {new Date(subscription.expirationDate).toLocaleDateString()}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Status */}
                 <div>
