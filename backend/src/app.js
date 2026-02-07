@@ -7,6 +7,9 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const productRoutes = require('./routes/product.routes');
 const planRoutes = require('./routes/plan.routes');
+const subscriptionRoutes = require('./routes/subscription.routes');
+const invoiceRoutes = require('./routes/invoice.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 function createApp() {
 	const app = express();
@@ -29,6 +32,9 @@ function createApp() {
 	app.use('/api/users', userRoutes);
 	app.use('/api/products', productRoutes);
 	app.use('/api/plans', planRoutes);
+	app.use('/api/subscriptions', subscriptionRoutes);
+	app.use('/api/invoices', invoiceRoutes);
+	app.use('/api/payments', paymentRoutes);
 
 	// 404
 	app.use((_req, res) => {
