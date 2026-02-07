@@ -7,6 +7,7 @@ import { Label } from '../../components/ui/Label.jsx';
 import { productService } from '../../lib/services/productService.js';
 import { useToast } from '../../hooks/use-toast';
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { ProductAvatar } from '../../components/ProductAvatar.jsx';
 import {
   Dialog,
   DialogContent,
@@ -158,7 +159,12 @@ export default function AdminProducts() {
             <tbody>
               {products.map((product) => (
                 <tr key={product.id}>
-                  <td className="font-medium text-foreground">{product.name}</td>
+                  <td className="font-medium text-foreground">
+                    <div className="flex items-center gap-2">
+                      <ProductAvatar product={product} size={28} className="rounded-lg" />
+                      <span>{product.name}</span>
+                    </div>
+                  </td>
                   <td>{product.sku || '-'}</td>
                   <td className="max-w-xs truncate">{product.description || '-'}</td>
                   <td>₹{Number(product.price || 0).toFixed(0)}</td>

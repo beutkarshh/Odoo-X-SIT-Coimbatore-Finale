@@ -12,6 +12,7 @@ import { Package, Layers, CreditCard, CheckCircle, AlertCircle, FileText, Downlo
 import { SearchFilter } from '../../components/SearchFilter.jsx';
 import { ProductCardSkeleton, GridSkeleton } from '../../components/LoadingSkeleton.jsx';
 import { NoProductsFound } from '../../components/EmptyState.jsx';
+import { ProductAvatar } from '../../components/ProductAvatar.jsx';
 import {
   Dialog,
   DialogContent,
@@ -311,19 +312,6 @@ export default function PortalProducts() {
     navigate('/portal/invoices');
   };
 
-  const getProductIcon = (type) => {
-    switch (type) {
-      case 'SERVICE':
-        return <Layers className="w-8 h-8 text-primary" />;
-      case 'SAAS':
-        return <Package className="w-8 h-8 text-blue-500" />;
-      case 'LICENSE':
-        return <Package className="w-8 h-8 text-purple-500" />;
-      default:
-        return <Package className="w-8 h-8 text-muted-foreground" />;
-    }
-  };
-
   const getTypeColor = (type) => {
     switch (type) {
       case 'SERVICE':
@@ -402,9 +390,7 @@ export default function PortalProducts() {
                 className="bg-card border border-border rounded-lg p-6 cursor-pointer hover:border-primary hover:shadow-md transition-all duration-200 group"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-lg bg-muted/50 group-hover:bg-primary/10 transition-colors">
-                    {getProductIcon(product.type)}
-                  </div>
+                  <ProductAvatar product={product} size={44} className="rounded-lg" />
                   <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getTypeColor(product.type)}`}>
                     {product.type}
                   </span>
@@ -443,7 +429,7 @@ export default function PortalProducts() {
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {selectedProduct && getProductIcon(selectedProduct.type)}
+              {selectedProduct && <ProductAvatar product={selectedProduct} size={28} className="rounded-lg" />}
               {selectedProduct?.name} - Subscription Plans
             </DialogTitle>
           </DialogHeader>

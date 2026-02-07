@@ -7,6 +7,7 @@ import { planService } from '../../lib/services/planService.js';
 import { Package, Search, ArrowRight, Loader2, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
+import { ProductAvatar } from '../../components/ProductAvatar.jsx';
 import { useToast } from '../../hooks/use-toast';
 import {
   Dialog,
@@ -255,9 +256,7 @@ export default function ProductsNew() {
                 className="cursor-pointer"
               >
                 {/* Product Icon */}
-                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Package size={32} className="text-primary" />
-                </div>
+                <ProductAvatar product={product} size={64} className="mb-4 rounded-2xl" />
 
                 {/* Product Info */}
                 <div className="mb-4">

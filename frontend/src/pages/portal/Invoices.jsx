@@ -11,6 +11,7 @@ import { Receipt, Download, CreditCard, CheckCircle, Clock, FileText, X, Printer
 import { SearchFilter } from '../../components/SearchFilter.jsx';
 import { StatsCardSkeleton, CardSkeleton } from '../../components/LoadingSkeleton.jsx';
 import { NoInvoices, NoSearchResults } from '../../components/EmptyState.jsx';
+import { ProductAvatar } from '../../components/ProductAvatar.jsx';
 import {
   Dialog,
   DialogContent,
@@ -572,10 +573,13 @@ export default function PortalInvoices() {
                         <h3 className="font-semibold text-foreground">{invoice.invoiceNo}</h3>
                         <StatusBadge status={invoice.status} />
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {plan?.name || 'Unknown Plan'}
-                        {product && ` • ${product.name}`}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        {product && <ProductAvatar product={product} size={26} className="rounded-lg" />}
+                        <p className="text-sm text-muted-foreground">
+                          {plan?.name || 'Unknown Plan'}
+                          {product && ` • ${product.name}`}
+                        </p>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Subscription: {subscription?.subscriptionNo || 'N/A'}
                       </p>

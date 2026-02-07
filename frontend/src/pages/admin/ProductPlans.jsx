@@ -8,6 +8,7 @@ import { subscriptionService } from '../../lib/services/subscriptionService.js';
 import { ArrowLeft, Search, Calendar, Users, ArrowRight, Loader2, Plus, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
+import { ProductAvatar } from '../../components/ProductAvatar.jsx';
 import { useToast } from '../../hooks/use-toast';
 import {
   Dialog,
@@ -221,7 +222,14 @@ export default function ProductPlans() {
           <ArrowLeft size={18} className="mr-2" />
           Back to Products
         </Button>
-        <PageHeader title={`${product.name} - Plans`} />
+        <PageHeader
+          title={
+            <span className="inline-flex items-center gap-3">
+              <ProductAvatar product={product} size={34} className="rounded-xl" />
+              <span>{product.name} - Plans</span>
+            </span>
+          }
+        />
         <p className="text-muted-foreground mt-2">
           View and manage subscription plans for {product.name}
         </p>

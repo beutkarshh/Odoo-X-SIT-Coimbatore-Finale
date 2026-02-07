@@ -10,6 +10,7 @@ import { SearchFilter } from '../../components/SearchFilter.jsx';
 import { StatsCardSkeleton, CardSkeleton, GridSkeleton } from '../../components/LoadingSkeleton.jsx';
 import { NoSubscriptions } from '../../components/EmptyState.jsx';
 import { useNavigate } from 'react-router-dom';
+import { ProductAvatar } from '../../components/ProductAvatar.jsx';
 
 export default function PortalSubscriptions() {
   const { user } = useAuth();
@@ -169,12 +170,17 @@ export default function PortalSubscriptions() {
                       <span className="text-sm text-muted-foreground">{subscription.subscriptionNo}</span>
                       <StatusBadge status={subscription.status} />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">{plan?.name || 'Unknown Plan'}</h3>
-                    {product && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Product: {product.name} ({product.type})
-                      </p>
-                    )}
+                    <div className="flex items-start gap-3">
+                      {product && <ProductAvatar product={product} size={36} className="rounded-xl mt-0.5" />}
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">{plan?.name || 'Unknown Plan'}</h3>
+                        {product && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {product.name} • {product.type}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary">
