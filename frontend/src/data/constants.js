@@ -4,6 +4,12 @@ export const Role = {
   CUSTOMER: 'CUSTOMER',
 };
 
+export const InternalRequestStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+};
+
 export const SubscriptionStatus = {
   DRAFT: 'DRAFT',
   QUOTATION: 'QUOTATION',

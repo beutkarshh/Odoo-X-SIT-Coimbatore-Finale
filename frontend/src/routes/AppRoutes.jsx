@@ -1,18 +1,16 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { Role } from '../data/constants.js';
 
 import Index from '../pages/Index.jsx';
 import NotFound from '../pages/NotFound.jsx';
 
-import AdminLogin from '../pages/admin/Login.jsx';
 import AdminDashboard from '../pages/admin/Dashboard.jsx';
 import AdminProducts from '../pages/admin/Products.jsx';
 import AdminPlans from '../pages/admin/Plans.jsx';
 import AdminSubscriptions from '../pages/admin/Subscriptions.jsx';
 import AdminInvoices from '../pages/admin/Invoices.jsx';
 
-import InternalLogin from '../pages/internal/Login.jsx';
 import InternalDashboard from '../pages/internal/Dashboard.jsx';
 import InternalSubscriptions from '../pages/internal/Subscriptions.jsx';
 import InternalInvoices from '../pages/internal/Invoices.jsx';
@@ -32,8 +30,18 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
 
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/reset-password" element={<ResetPassword />} />
+      {/* Unified Login/Signup */}
+      <Route path="/login" element={<PortalLogin />} />
+      <Route path="/signup" element={<PortalSignup />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* Redirect old login routes to unified login */}
+      <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+      <Route path="/internal/login" element={<Navigate to="/login" replace />} />
+      <Route path="/admin/reset-password" element={<Navigate to="/reset-password" replace />} />
+      <Route path="/internal/reset-password" element={<Navigate to="/reset-password" replace />} />
+
+      {/* Admin Routes */}
       <Route
         path="/admin/dashboard"
         element={
@@ -75,8 +83,7 @@ export function AppRoutes() {
         }
       />
 
-      <Route path="/internal/login" element={<InternalLogin />} />
-      <Route path="/internal/reset-password" element={<ResetPassword />} />
+      {/* Internal Routes */}
       <Route
         path="/internal/dashboard"
         element={
@@ -102,9 +109,7 @@ export function AppRoutes() {
         }
       />
 
-      <Route path="/login" element={<PortalLogin />} />
-      <Route path="/signup" element={<PortalSignup />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+      {/* Customer Portal Routes */}
       <Route
         path="/portal/dashboard"
         element={

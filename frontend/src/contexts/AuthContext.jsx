@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { mockUsers } from '../data/mockData.js';
-import { Role } from '../data/constants.js';
+import { getAllUsers, getPendingInternalRequests } from '../data/mockData.js';
+import { Role, InternalRequestStatus } from '../data/constants.js';
 
 const AuthContext = createContext(undefined);
 
@@ -11,16 +11,29 @@ export function AuthProvider({ children }) {
   });
 
   const login = useCallback(async (email, password) => {
-    const foundUser = mockUsers.find(
+    // Check if this is a pending internal user request
+    const pendingRequests = getPendingInternalRequests();
+    const pendingRequest = pendingRequests.find(
+      r => r.email.toLowerCase() === email.toLowerCase() && r.status === InternalRequestStatus.PENDING
+    );
+    
+    if (pendingRequest) {
+      // Return special status for pending internal user
+      return { success: false, isPending: true };
+    }
+
+    // Check all users (including approved internal users)
+    const allUsers = getAllUsers();
+    const foundUser = allUsers.find(
       u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
     );
     
     if (foundUser) {
       setUser(foundUser);
       localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      return true;
+      return { success: true, user: foundUser };
     }
-    return false;
+    return { success: false, isPending: false };
   }, []);
 
   const logout = useCallback(() => {

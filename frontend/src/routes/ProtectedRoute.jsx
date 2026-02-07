@@ -7,16 +7,12 @@ export function ProtectedRoute({ children, allowedRoles }) {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    if (allowedRoles.includes(Role.ADMIN)) {
-      return <Navigate to="/admin/login" state={{ from: location }} replace />;
-    }
-    if (allowedRoles.includes(Role.INTERNAL)) {
-      return <Navigate to="/internal/login" state={{ from: location }} replace />;
-    }
+    // Redirect all unauthenticated users to unified login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!allowedRoles.includes(user?.role)) {
+    // Redirect to appropriate dashboard based on role
     if (user?.role === Role.ADMIN) {
       return <Navigate to="/admin/dashboard" replace />;
     }

@@ -14,20 +14,7 @@ function FeatureCard({ icon, title, description }) {
   );
 }
 
-function AccessCard({ title, description, link, credentials }) {
-  return (
-    <div className="bg-card border border-border rounded-md p-6 text-center">
-      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground mb-4">{description}</p>
-      <Link to={link}>
-        <Button className="w-full bg-primary hover:bg-primary/90 mb-3">
-          Access Portal
-        </Button>
-      </Link>
-      <p className="text-xs text-muted-foreground font-mono">{credentials}</p>
-    </div>
-  );
-}
+
 
 export default function Index() {
   return (
@@ -40,10 +27,10 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login">
-              <Button variant="outline">Customer Login</Button>
+              <Button variant="outline">Login</Button>
             </Link>
-            <Link to="/admin/login">
-              <Button className="bg-primary hover:bg-primary/90">Admin Portal</Button>
+            <Link to="/signup">
+              <Button className="bg-primary hover:bg-primary/90">Sign Up</Button>
             </Link>
           </div>
         </div>
@@ -60,16 +47,11 @@ export default function Index() {
             and invoices. Built with role-based access control for admins, internal staff,
             and customers.
           </p>
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center">
             <Link to="/signup">
               <Button size="lg" className="bg-primary hover:bg-primary/90">
                 Get Started
                 <ArrowRight size={18} className="ml-2" />
-              </Button>
-            </Link>
-            <Link to="/internal/login">
-              <Button size="lg" variant="outline">
-                Internal Staff
               </Button>
             </Link>
           </div>
@@ -119,27 +101,27 @@ export default function Index() {
       <section className="py-16 px-6">
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl font-semibold text-foreground text-center mb-8">
-            Access Portals
+            Get Started
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <AccessCard
-              title="Admin Portal"
-              description="Full system control: products, plans, subscriptions, invoices, and user management."
-              link="/admin/login"
-              credentials="admin@example.com / admin123"
-            />
-            <AccessCard
-              title="Internal Portal"
-              description="Operational access for staff: manage subscriptions and process invoices."
-              link="/internal/login"
-              credentials="internal@example.com / internal123"
-            />
-            <AccessCard
-              title="Customer Portal"
-              description="Self-service for customers: view plans, manage subscriptions, pay invoices."
-              link="/login"
-              credentials="customer@example.com / customer123"
-            />
+          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div className="bg-card border border-border rounded-md p-6 text-center">
+              <h3 className="text-lg font-semibold text-foreground mb-2">New User?</h3>
+              <p className="text-sm text-muted-foreground mb-4">Create an account to start managing your subscriptions or join as internal staff.</p>
+              <Link to="/signup">
+                <Button className="w-full bg-primary hover:bg-primary/90">
+                  Create Account
+                </Button>
+              </Link>
+            </div>
+            <div className="bg-card border border-border rounded-md p-6 text-center">
+              <h3 className="text-lg font-semibold text-foreground mb-2">Existing User?</h3>
+              <p className="text-sm text-muted-foreground mb-4">Sign in to access your dashboard - works for all user types.</p>
+              <Link to="/login">
+                <Button className="w-full" variant="outline">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

@@ -5,12 +5,13 @@ import { Role } from '../../data/constants.js';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
 import { Label } from '../../components/ui/Label.jsx';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Clock } from 'lucide-react';
 
 export default function PortalLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isPendingUser, setIsPendingUser] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -18,18 +19,23 @@ export default function PortalLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsPendingUser(false);
     setIsLoading(true);
 
-    const success = await login(email, password);
+    const result = await login(email, password);
 
-    if (success) {
-      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      if (user.role === Role.CUSTOMER) {
-        navigate('/portal/dashboard');
+    if (result.success) {
+      const user = result.user;
+      // Auto-redirect based on user role
+      if (user.role === Role.ADMIN) {
+        navigate('/admin/dashboard');
+      } else if (user.role === Role.INTERNAL) {
+        navigate('/internal/dashboard');
       } else {
-        setError('Access denied. Please use the appropriate login portal.');
-        localStorage.removeItem('currentUser');
+        navigate('/portal/dashboard');
       }
+    } else if (result.isPending) {
+      setIsPendingUser(true);
     } else {
       setError('Invalid email or password');
     }
@@ -37,14 +43,41 @@ export default function PortalLogin() {
     setIsLoading(false);
   };
 
+  if (isPendingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="w-full max-w-md">
+          <div className="bg-card border border-border rounded-lg shadow-sm p-8 text-center">
+            <div className="mb-4 inline-flex items-center justify-center w-16 h-16 bg-warning/10 rounded-full">
+              <Clock className="w-8 h-8 text-warning" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Approval Pending</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Your internal staff account is still waiting for administrator approval.
+            </p>
+            <div className="p-4 bg-muted/50 rounded-md mb-6">
+              <p className="text-sm text-foreground font-medium">Please wait</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                You will be able to login once an administrator approves your request.
+              </p>
+            </div>
+            <Button variant="outline" className="w-full" onClick={() => setIsPendingUser(false)}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30">
       <div className="w-full max-w-md">
         <div className="bg-card border border-border rounded-lg shadow-sm p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold text-foreground">Customer Portal</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Welcome Back</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Sign in to manage your subscriptions
+              Sign in to access your account
             </p>
           </div>
 
@@ -97,7 +130,11 @@ export default function PortalLogin() {
 
           <div className="mt-6 p-4 bg-muted/50 rounded-md">
             <p className="text-xs text-muted-foreground mb-2">Demo credentials:</p>
-            <p className="text-xs font-mono text-foreground">customer@example.com / customer123</p>
+            <div className="space-y-1 text-xs font-mono text-foreground">
+              <p>Admin: admin@example.com / admin123</p>
+              <p>Internal: internal@example.com / internal123</p>
+              <p>Customer: customer@example.com / customer123</p>
+            </div>
           </div>
 
           <div className="mt-6 text-center space-y-2">

@@ -1,4 +1,67 @@
-import { Role, SubscriptionStatus, InvoiceStatus } from './constants';
+import { Role, SubscriptionStatus, InvoiceStatus, InternalRequestStatus } from './constants';
+
+// Pending internal user requests (stored in localStorage for persistence)
+export const getPendingInternalRequests = () => {
+  const stored = localStorage.getItem('pendingInternalRequests');
+  return stored ? JSON.parse(stored) : [];
+};
+
+export const addPendingInternalRequest = (request) => {
+  const requests = getPendingInternalRequests();
+  const newRequest = {
+    id: Date.now(),
+    ...request,
+    status: InternalRequestStatus.PENDING,
+    createdAt: new Date().toISOString(),
+  };
+  requests.push(newRequest);
+  localStorage.setItem('pendingInternalRequests', JSON.stringify(requests));
+  return newRequest;
+};
+
+export const approveInternalRequest = (requestId) => {
+  const requests = getPendingInternalRequests();
+  const requestIndex = requests.findIndex(r => r.id === requestId);
+  if (requestIndex !== -1) {
+    const request = requests[requestIndex];
+    requests[requestIndex] = { ...request, status: InternalRequestStatus.APPROVED };
+    localStorage.setItem('pendingInternalRequests', JSON.stringify(requests));
+    
+    // Add user to mockUsers in localStorage
+    const storedUsers = localStorage.getItem('additionalUsers');
+    const additionalUsers = storedUsers ? JSON.parse(storedUsers) : [];
+    const newUser = {
+      id: Date.now(),
+      name: request.name,
+      email: request.email,
+      password: request.password,
+      role: Role.INTERNAL,
+      createdAt: new Date().toISOString(),
+    };
+    additionalUsers.push(newUser);
+    localStorage.setItem('additionalUsers', JSON.stringify(additionalUsers));
+    return true;
+  }
+  return false;
+};
+
+export const rejectInternalRequest = (requestId) => {
+  const requests = getPendingInternalRequests();
+  const requestIndex = requests.findIndex(r => r.id === requestId);
+  if (requestIndex !== -1) {
+    requests[requestIndex] = { ...requests[requestIndex], status: InternalRequestStatus.REJECTED };
+    localStorage.setItem('pendingInternalRequests', JSON.stringify(requests));
+    return true;
+  }
+  return false;
+};
+
+// Get all users including those added via approved requests
+export const getAllUsers = () => {
+  const storedUsers = localStorage.getItem('additionalUsers');
+  const additionalUsers = storedUsers ? JSON.parse(storedUsers) : [];
+  return [...mockUsers, ...additionalUsers];
+};
 
 export const mockUsers = [
   {
