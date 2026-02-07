@@ -10,47 +10,112 @@ export const discountService = {
    * Get all discounts
    */
   async getAll() {
-    const response = await api.get('/api/discounts');
-    return response.data;
+    try {
+      const response = await api.get('/api/discounts');
+      return {
+        success: true,
+        data: response.data.data || response.data.discounts || response.data || [],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch discounts',
+        data: [],
+      };
+    }
   },
 
   /**
    * Get only active discounts (within date range and active status)
    */
   async getActive() {
-    const response = await api.get('/api/discounts/active');
-    return response.data;
+    try {
+      const response = await api.get('/api/discounts/active');
+      return {
+        success: true,
+        data: response.data.data || response.data || [],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch active discounts',
+        data: [],
+      };
+    }
   },
 
   /**
    * Get a single discount by ID
    */
   async getById(id) {
-    const response = await api.get(`/api/discounts/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/discounts/${id}`);
+      return {
+        success: true,
+        data: response.data.discount || response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch discount',
+        data: null,
+      };
+    }
   },
 
   /**
    * Create a new discount
    */
   async create(discountData) {
-    const response = await api.post('/api/discounts', discountData);
-    return response.data;
+    try {
+      const response = await api.post('/api/discounts', discountData);
+      return {
+        success: true,
+        data: response.data.discount || response.data,
+        message: 'Discount created successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to create discount',
+      };
+    }
   },
 
   /**
    * Update an existing discount
    */
   async update(id, discountData) {
-    const response = await api.put(`/api/discounts/${id}`, discountData);
-    return response.data;
+    try {
+      const response = await api.put(`/api/discounts/${id}`, discountData);
+      return {
+        success: true,
+        data: response.data.discount || response.data,
+        message: 'Discount updated successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to update discount',
+      };
+    }
   },
 
   /**
    * Delete a discount
    */
   async delete(id) {
-    const response = await api.delete(`/api/discounts/${id}`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/discounts/${id}`);
+      return {
+        success: true,
+        message: 'Discount deleted successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to delete discount',
+      };
+    }
   },
 };

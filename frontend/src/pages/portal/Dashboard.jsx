@@ -1,22 +1,46 @@
+import { useState, useEffect } from 'react';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { StatCard } from '../../components/ui/StatCard.jsx';
 import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { getCustomerSubscriptions, getCustomerInvoices, getPlanById } from '../../data/mockData.js';
+import { subscriptionService } from '../../lib/services/subscriptionService.js';
+import { invoiceService } from '../../lib/services/invoiceService.js';
 import { SubscriptionStatus, InvoiceStatus } from '../../data/constants.js';
-import { CreditCard, FileText, Calendar, Clock } from 'lucide-react';
+import { CreditCard, FileText, Calendar, Clock, Loader2 } from 'lucide-react';
 
 export default function PortalDashboard() {
   const { user } = useAuth();
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const subscriptions = user ? getCustomerSubscriptions(user.id) : [];
-  const invoices = user ? getCustomerInvoices(user.id) : [];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [subsResult, invResult] = await Promise.all([
+          subscriptionService.getAll(),
+          invoiceService.getAll(),
+        ]);
+        if (subsResult.success && Array.isArray(subsResult.data)) {
+          setSubscriptions(subsResult.data);
+        }
+        if (invResult.success && Array.isArray(invResult.data)) {
+          setInvoices(invResult.data);
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const activeSubscription = subscriptions.find((s) => s.status === SubscriptionStatus.ACTIVE);
-  const activePlan = activeSubscription ? getPlanById(activeSubscription.planId) : null;
+  const activePlan = activeSubscription?.plan || null;
   const outstandingInvoices = invoices.filter((i) => i.status !== InvoiceStatus.PAID);
-  const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + i.total, 0);
+  const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + Number(i.total || 0), 0);
 
   const nextBillingDate = activeSubscription
     ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
@@ -27,6 +51,7 @@ export default function PortalDashboard() {
     : 'N/A';
 
   const formatDateTime = (date) => {
+    if (!date) return 'N/A';
     return new Date(date).toLocaleString('en-IN', {
       day: '2-digit',
       month: 'short',
@@ -38,6 +63,7 @@ export default function PortalDashboard() {
   };
 
   const formatDate = (date) => {
+    if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
@@ -46,12 +72,24 @@ export default function PortalDashboard() {
   };
 
   const formatTime = (date) => {
+    if (!date) return 'N/A';
     return new Date(date).toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
     });
   };
+
+  if (loading) {
+    return (
+      <Layout type="portal">
+        <PageHeader title={`Welcome, ${user?.name || 'Customer'}`} />
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout type="portal">
@@ -71,7 +109,7 @@ export default function PortalDashboard() {
               <div>
                 <h3 className="text-xl font-semibold text-foreground">{activePlan.name}</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  ₹{activePlan.price.toFixed(0)} / {activePlan.billingPeriod}
+                  ₹{Number(activePlan.price || 0).toFixed(0)} / {activePlan.billingPeriod || 'Monthly'}
                 </p>
               </div>
               <StatusBadge status={activeSubscription.status} />
@@ -86,7 +124,7 @@ export default function PortalDashboard() {
               <div>
                 <p className="text-xs text-muted-foreground">End Date</p>
                 <p className="text-sm font-medium text-foreground">
-                  {formatDate(activeSubscription.endDate)}
+                  {formatDate(activeSubscription.expirationDate)}
                 </p>
               </div>
             </div>
@@ -111,8 +149,8 @@ export default function PortalDashboard() {
               <tbody>
                 {invoices.slice(0, 5).map((invoice) => (
                   <tr key={invoice.id}>
-                    <td className="font-medium text-foreground">{invoice.number}</td>
-                    <td>₹{invoice.total.toFixed(0)}</td>
+                    <td className="font-medium text-foreground">{invoice.invoiceNo}</td>
+                    <td>₹{Number(invoice.total || 0).toFixed(0)}</td>
                     <td className="text-sm">{formatDateTime(invoice.createdAt)}</td>
                     <td className="text-sm">
                       {invoice.paidAt ? (

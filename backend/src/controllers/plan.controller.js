@@ -6,7 +6,8 @@ const planService = require('../services/plan.service');
  */
 async function getAllPlans(req, res, next) {
   try {
-    const plans = await planService.getAllPlans();
+    const { productId } = req.query;
+    const plans = await planService.getAllPlans({ productId });
 
     return res.status(200).json({
       success: true,
@@ -48,6 +49,7 @@ async function createPlan(req, res, next) {
       minQuantity,
       startDate,
       endDate,
+      productId,
       autoClose,
       closable,
       pausable,
@@ -79,6 +81,7 @@ async function createPlan(req, res, next) {
       minQuantity,
       startDate,
       endDate,
+      productId,
       autoClose,
       closable,
       pausable,
@@ -110,6 +113,7 @@ async function updatePlan(req, res, next) {
       minQuantity,
       startDate,
       endDate,
+      productId,
       autoClose,
       closable,
       pausable,
@@ -135,6 +139,7 @@ async function updatePlan(req, res, next) {
       minQuantity,
       startDate,
       endDate,
+      productId,
       autoClose,
       closable,
       pausable,

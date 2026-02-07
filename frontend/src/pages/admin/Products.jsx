@@ -161,7 +161,7 @@ export default function AdminProducts() {
                   <td className="font-medium text-foreground">{product.name}</td>
                   <td>{product.sku || '-'}</td>
                   <td className="max-w-xs truncate">{product.description || '-'}</td>
-                  <td>₹{product.price.toFixed(0)}</td>
+                  <td>₹{Number(product.price || 0).toFixed(0)}</td>
                   <td>
                     <div className="flex items-center gap-2">
                       <button

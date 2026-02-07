@@ -10,7 +10,7 @@ export const subscriptionService = {
       const response = await api.get('/api/subscriptions');
       return {
         success: true,
-        data: response.data.subscriptions || response.data,
+        data: response.data.data || response.data.subscriptions || [],
       };
     } catch (error) {
       return {
@@ -30,7 +30,7 @@ export const subscriptionService = {
       const response = await api.get(`/api/subscriptions/${id}`);
       return {
         success: true,
-        data: response.data.subscription || response.data,
+        data: response.data.data || response.data.subscription || null,
       };
     } catch (error) {
       return {
@@ -50,7 +50,7 @@ export const subscriptionService = {
       const response = await api.post('/api/subscriptions', subscriptionData);
       return {
         success: true,
-        data: response.data.subscription || response.data,
+        data: response.data.data || response.data.subscription || null,
         message: 'Subscription created successfully',
       };
     } catch (error) {
@@ -70,7 +70,7 @@ export const subscriptionService = {
       const response = await api.patch(`/api/subscriptions/${id}/status`, { status });
       return {
         success: true,
-        data: response.data.subscription || response.data,
+        data: response.data.data || response.data.subscription || null,
         message: 'Subscription status updated successfully',
       };
     } catch (error) {

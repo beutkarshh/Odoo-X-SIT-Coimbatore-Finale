@@ -5,7 +5,7 @@ import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { getCustomerInvoices, getSubscriptionById, getPlanById, getProductById } from '../../data/mockData.js';
+import { invoiceService } from '../../lib/services/invoiceService.js';
 import { InvoiceStatus } from '../../data/constants.js';
 import { Receipt, Download, CreditCard, CheckCircle, Clock, FileText, X, Printer } from 'lucide-react';
 import { SearchFilter } from '../../components/SearchFilter.jsx';
@@ -20,23 +20,35 @@ import {
 
 export default function PortalInvoices() {
   const { user } = useAuth();
-  const invoices = user ? getCustomerInvoices(user.id) : [];
+  const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
-  const [filteredInvoices, setFilteredInvoices] = useState(invoices);
+  const [filteredInvoices, setFilteredInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate initial loading
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    loadInvoices();
   }, []);
+
+  const loadInvoices = async () => {
+    try {
+      const result = await invoiceService.getAll();
+      if (result.success && Array.isArray(result.data)) {
+        setInvoices(result.data);
+        setFilteredInvoices(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load invoices:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Enrich invoices with additional data for filtering
   const enrichedInvoices = invoices.map(inv => {
-    const subscription = getSubscriptionById(inv.subscriptionId);
-    const plan = subscription ? getPlanById(subscription.planId) : null;
-    const product = plan ? getProductById(plan.productId) : null;
+    const subscription = inv.subscription;
+    const plan = subscription?.plan;
+    const product = subscription?.lines?.[0]?.product;
     return {
       ...inv,
       planName: plan?.name || 'Unknown',
@@ -61,10 +73,10 @@ export default function PortalInvoices() {
     setFilteredInvoices(filtered);
   }, []);
 
-  const totalAmount = invoices.reduce((sum, inv) => sum + inv.total, 0);
+  const totalAmount = invoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
   const paidAmount = invoices
     .filter((inv) => inv.status === InvoiceStatus.PAID)
-    .reduce((sum, inv) => sum + inv.total, 0);
+    .reduce((sum, inv) => sum + Number(inv.total || 0), 0);
   const pendingCount = invoices.filter((inv) => inv.status !== InvoiceStatus.PAID).length;
 
   const formatCurrency = (amount) => {
@@ -134,10 +146,10 @@ export default function PortalInvoices() {
   };
 
   const handleDownloadInvoice = (invoice) => {
-    const subscription = getSubscriptionById(invoice.subscriptionId);
-    const plan = subscription ? getPlanById(subscription.planId) : null;
-    const product = plan ? getProductById(plan.productId) : null;
-    const breakdown = calculateBreakdown(invoice.total);
+    const subscription = invoice.subscription;
+    const plan = subscription?.plan;
+    const product = subscription?.lines?.[0]?.product;
+    const breakdown = calculateBreakdown(Number(invoice.total || 0));
 
     // Create PDF
     const doc = new jsPDF();
@@ -184,9 +196,9 @@ export default function PortalInvoices() {
     doc.text('Payment Method:', pageWidth / 2 + 10, y + 25);
     
     doc.setFont('helvetica', 'normal');
-    doc.text(invoice.number, 55, y + 5);
+    doc.text(invoice.invoiceNo || invoice.number || 'N/A', 55, y + 5);
     doc.text(formatDateTime(invoice.createdAt), 55, y + 15);
-    doc.text(invoice.customerName || user?.name || 'Customer', 55, y + 25);
+    doc.text(subscription?.customer?.name || user?.name || 'Customer', 55, y + 25);
     
     // Status with color
     if (invoice.status === 'PAID') {
@@ -296,9 +308,9 @@ export default function PortalInvoices() {
     y += 8;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Subscription Number: ${subscription?.number || 'N/A'}`, 20, y);
+    doc.text(`Subscription Number: ${subscription?.subscriptionNo || 'N/A'}`, 20, y);
     doc.text(`Start Date: ${subscription ? formatDate(subscription.startDate) : 'N/A'}`, 20, y + 6);
-    doc.text(`End Date: ${subscription ? formatDate(subscription.endDate) : 'N/A'}`, 100, y + 6);
+    doc.text(`End Date: ${subscription ? formatDate(subscription.expirationDate) : 'N/A'}`, 100, y + 6);
 
     y += 20;
 
@@ -388,7 +400,7 @@ export default function PortalInvoices() {
     centerText('SubsManager | www.subsmanager.com | support@subsmanager.com', 294);
 
     // Save PDF
-    doc.save(`${invoice.number}.pdf`);
+    doc.save(`${invoice.invoiceNo || invoice.number || 'invoice'}.pdf`);
   };
 
   return (
@@ -478,9 +490,9 @@ export default function PortalInvoices() {
       ) : (
         <div className="space-y-4">
           {filteredInvoices.map((invoice) => {
-            const subscription = getSubscriptionById(invoice.subscriptionId);
-            const plan = subscription ? getPlanById(subscription.planId) : null;
-            const product = plan ? getProductById(plan.productId) : null;
+            const subscription = invoice.subscription;
+            const plan = subscription?.plan;
+            const product = subscription?.lines?.[0]?.product;
             const canPay = invoice.status === InvoiceStatus.CONFIRMED;
 
             return (
@@ -511,7 +523,7 @@ export default function PortalInvoices() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-foreground">{invoice.number}</h3>
+                        <h3 className="font-semibold text-foreground">{invoice.invoiceNo}</h3>
                         <StatusBadge status={invoice.status} />
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -519,12 +531,12 @@ export default function PortalInvoices() {
                         {product && ` • ${product.name}`}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Subscription: {subscription?.number || 'N/A'}
+                        Subscription: {subscription?.subscriptionNo || 'N/A'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-foreground">₹{invoice.total.toLocaleString('en-IN')}</p>
+                    <p className="text-2xl font-bold text-foreground">₹{Number(invoice.total || 0).toLocaleString('en-IN')}</p>
                     <p className="text-xs text-muted-foreground">
                       {formatDateTime(invoice.createdAt)}
                     </p>
@@ -601,10 +613,10 @@ export default function PortalInvoices() {
           </DialogHeader>
 
           {selectedInvoice && (() => {
-            const subscription = getSubscriptionById(selectedInvoice.subscriptionId);
-            const plan = subscription ? getPlanById(subscription.planId) : null;
-            const product = plan ? getProductById(plan.productId) : null;
-            const breakdown = calculateBreakdown(selectedInvoice.total);
+            const subscription = selectedInvoice.subscription;
+            const plan = subscription?.plan;
+            const product = subscription?.lines?.[0]?.product;
+            const breakdown = calculateBreakdown(Number(selectedInvoice.total || 0));
 
             return (
               <div className="mt-4">
@@ -614,15 +626,15 @@ export default function PortalInvoices() {
                     <div>
                       <h2 className="text-2xl font-bold text-foreground">TAX INVOICE</h2>
                       <StatusBadge status={selectedInvoice.status} />
-                      {selectedInvoice.customerName && (
+                      {subscription?.customer?.name && (
                         <p className="text-sm text-muted-foreground mt-2">
-                          Customer: <span className="font-medium text-foreground">{selectedInvoice.customerName}</span>
+                          Customer: <span className="font-medium text-foreground">{subscription.customer.name}</span>
                         </p>
                       )}
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Invoice Number</p>
-                      <p className="font-mono font-semibold text-foreground">{selectedInvoice.number}</p>
+                      <p className="font-mono font-semibold text-foreground">{selectedInvoice.invoiceNo}</p>
                       <p className="text-sm text-muted-foreground mt-2">Date & Time</p>
                       <p className="font-medium text-foreground">{formatDateTime(selectedInvoice.createdAt)}</p>
                       {selectedInvoice.paidAt && selectedInvoice.status === InvoiceStatus.PAID && (
@@ -643,8 +655,8 @@ export default function PortalInvoices() {
                       Billing Address
                     </h3>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p className="font-medium text-foreground">{selectedInvoice.customerName || user?.name || 'Customer Name'}</p>
-                      <p>{user?.email || 'customer@example.com'}</p>
+                      <p className="font-medium text-foreground">{subscription?.customer?.name || user?.name || 'Customer Name'}</p>
+                      <p>{subscription?.customer?.email || user?.email || 'customer@example.com'}</p>
                       <p>123 Business Street</p>
                       <p>Chennai, Tamil Nadu 600001</p>
                       <p>India</p>
@@ -657,7 +669,7 @@ export default function PortalInvoices() {
                       Shipping Address
                     </h3>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p className="font-medium text-foreground">{selectedInvoice.customerName || user?.name || 'Customer Name'}</p>
+                      <p className="font-medium text-foreground">{subscription?.customer?.name || user?.name || 'Customer Name'}</p>
                       <p>123 Business Street</p>
                       <p>Chennai, Tamil Nadu 600001</p>
                       <p>India</p>
@@ -724,7 +736,7 @@ export default function PortalInvoices() {
                   <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 text-center">
                     <p className="text-xs text-muted-foreground mb-1">End Date</p>
                     <p className="font-semibold text-purple-600">
-                      {subscription ? formatDate(subscription.endDate) : 'N/A'}
+                      {subscription ? formatDate(subscription.expirationDate) : 'N/A'}
                     </p>
                   </div>
                 </div>

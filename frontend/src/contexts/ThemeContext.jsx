@@ -45,16 +45,20 @@ export function ThemeProvider({ children }) {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const handleChange = (e) => {
-      const stored = localStorage.getItem('theme');
-      // Only auto-switch if user hasn't manually set a preference
-      if (!stored) {
-        setTheme(e.matches ? 'dark' : 'light');
+      try {
+        const stored = localStorage.getItem('theme');
+        // Only auto-switch if user hasn't manually set a preference
+        if (!stored) {
+          setTheme(e.matches ? 'dark' : 'light');
+        }
+      } catch (error) {
+        // localStorage may not be available
       }
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, []); // Empty dependency array - only set up listener once
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');

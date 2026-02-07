@@ -10,7 +10,7 @@ export const invoiceService = {
       const response = await api.get('/api/invoices');
       return {
         success: true,
-        data: response.data.invoices || response.data,
+        data: response.data.data || response.data.invoices || [],
       };
     } catch (error) {
       return {
@@ -30,7 +30,7 @@ export const invoiceService = {
       const response = await api.get(`/api/invoices/${id}`);
       return {
         success: true,
-        data: response.data.invoice || response.data,
+        data: response.data.data || response.data.invoice || null,
       };
     } catch (error) {
       return {
@@ -50,7 +50,7 @@ export const invoiceService = {
       const response = await api.post('/api/invoices/generate', { subscriptionId });
       return {
         success: true,
-        data: response.data.invoice || response.data,
+        data: response.data.data || response.data.invoice || null,
         message: 'Invoice generated successfully',
       };
     } catch (error) {
@@ -70,7 +70,7 @@ export const invoiceService = {
       const response = await api.patch(`/api/invoices/${id}/status`, { status });
       return {
         success: true,
-        data: response.data.invoice || response.data,
+        data: response.data.data || response.data.invoice || null,
         message: 'Invoice status updated successfully',
       };
     } catch (error) {

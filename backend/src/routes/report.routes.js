@@ -7,8 +7,14 @@ const router = express.Router();
 
 router.get('/dashboard-stats', 
   authenticateToken, 
-  authorizeRoles('ADMIN'), 
+  authorizeRoles('ADMIN', 'INTERNAL'), 
   reportController.getDashboardStats
+);
+
+router.get('/chart-data', 
+  authenticateToken, 
+  authorizeRoles('ADMIN', 'INTERNAL'), 
+  reportController.getChartData
 );
 
 module.exports = router;

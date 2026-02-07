@@ -187,7 +187,7 @@ export default function AdminPlans() {
                 return (
                   <tr key={plan.id} className={cn(expired && 'opacity-50')}>
                     <td className="font-medium text-foreground">{plan.name}</td>
-                    <td>₹{plan.price.toFixed(0)}</td>
+                    <td>₹{Number(plan.price || 0).toFixed(0)}</td>
                     <td>{plan.billingPeriod}</td>
                     <td>{plan.minQty}</td>
                     <td>{new Date(plan.startDate).toLocaleDateString()}</td>

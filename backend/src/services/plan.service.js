@@ -4,10 +4,18 @@ const prisma = new PrismaClient();
 
 /**
  * Get all recurring plans
+ * @param {Object} filters - Optional filters
+ * @param {number} filters.productId - Filter by product ID
  * @returns {Promise<Array>} List of plans
  */
-async function getAllPlans() {
+async function getAllPlans(filters = {}) {
+  const where = {};
+  if (filters.productId) {
+    where.productId = parseInt(filters.productId);
+  }
   return prisma.recurringPlan.findMany({
+    where,
+    include: { product: true },
     orderBy: { createdAt: 'desc' },
   });
 }
@@ -43,6 +51,7 @@ async function createPlan(data) {
       minQuantity: data.minQuantity || 1,
       startDate: new Date(data.startDate),
       endDate: data.endDate ? new Date(data.endDate) : null,
+      productId: data.productId ? parseInt(data.productId) : null,
       autoClose: data.autoClose !== undefined ? data.autoClose : false,
       closable: data.closable !== undefined ? data.closable : true,
       pausable: data.pausable !== undefined ? data.pausable : false,
@@ -76,6 +85,7 @@ async function updatePlan(id, data) {
       ...(data.minQuantity && { minQuantity: data.minQuantity }),
       ...(data.startDate && { startDate: new Date(data.startDate) }),
       ...(data.endDate !== undefined && { endDate: data.endDate ? new Date(data.endDate) : null }),
+      ...(data.productId !== undefined && { productId: data.productId ? parseInt(data.productId) : null }),
       ...(data.autoClose !== undefined && { autoClose: data.autoClose }),
       ...(data.closable !== undefined && { closable: data.closable }),
       ...(data.pausable !== undefined && { pausable: data.pausable }),

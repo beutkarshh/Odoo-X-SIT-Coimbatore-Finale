@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { Button } from '../../components/ui/Button.jsx';
-import { getInvoicesWithDetails } from '../../data/mockData.js';
+import { invoiceService } from '../../lib/services/invoiceService.js';
 import { InvoiceStatus, INVOICE_TRANSITIONS } from '../../data/constants.js';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,25 @@ import {
 } from '../../components/ui/DropdownMenu.jsx';
 
 export default function InternalInvoices() {
-  const [invoices, setInvoices] = useState(getInvoicesWithDetails());
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadInvoices();
+  }, []);
+
+  const loadInvoices = async () => {
+    try {
+      const result = await invoiceService.getAll();
+      if (result.success && Array.isArray(result.data)) {
+        setInvoices(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load invoices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDateTime = (date) => {
     if (!date) return 'N/A';
@@ -32,10 +50,17 @@ export default function InternalInvoices() {
     return INVOICE_TRANSITIONS[status] || [];
   };
 
-  const handleStatusChange = (invoiceId, newStatus) => {
-    setInvoices((prev) =>
-      prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: newStatus } : inv))
-    );
+  const handleStatusChange = async (invoiceId, newStatus) => {
+    try {
+      const result = await invoiceService.updateStatus(invoiceId, newStatus);
+      if (result.success) {
+        setInvoices((prev) =>
+          prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: newStatus } : inv))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to update invoice status:', error);
+    }
   };
 
   const getActionLabel = (status) => {
@@ -46,6 +71,17 @@ export default function InternalInvoices() {
     };
     return labels[status];
   };
+
+  if (loading) {
+    return (
+      <Layout type="internal">
+        <PageHeader title="Invoices" />
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout type="internal">
@@ -66,58 +102,66 @@ export default function InternalInvoices() {
             </tr>
           </thead>
           <tbody>
-            {invoices.map((invoice) => {
-              const nextActions = getNextActions(invoice.status);
+            {invoices.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="text-center py-8 text-muted-foreground">
+                  No invoices found
+                </td>
+              </tr>
+            ) : (
+              invoices.map((invoice) => {
+                const nextActions = getNextActions(invoice.status);
 
-              return (
-                <tr key={invoice.id}>
-                  <td className="font-medium text-foreground">{invoice.number}</td>
-                  <td>
-                    <div>
-                      <p className="font-medium">{invoice.customerName || invoice.user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{invoice.user?.email}</p>
-                    </div>
-                  </td>
-                  <td>{invoice.subscription?.number}</td>
-                  <td>₹{invoice.total.toFixed(0)}</td>
-                  <td className="text-sm">{formatDateTime(invoice.createdAt)}</td>
-                  <td className="text-sm">
-                    {invoice.paidAt ? (
-                      <span className="text-green-600">{formatDateTime(invoice.paidAt)}</span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </td>
-                  <td>
-                    <StatusBadge status={invoice.status} />
-                  </td>
-                  <td>
-                    {nextActions.length > 0 ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8">
-                            Actions
-                            <ChevronDown size={14} className="ml-1" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {nextActions.map((action) => (
-                            <DropdownMenuItem
-                              key={action}
-                              onClick={() => handleStatusChange(invoice.id, action)}
-                            >
-                              {getActionLabel(action)}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Completed</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr key={invoice.id}>
+                    <td className="font-medium text-foreground">{invoice.invoiceNo}</td>
+                    <td>
+                      <div>
+                        <p className="font-medium">{invoice.subscription?.customer?.name || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground">{invoice.subscription?.customer?.email}</p>
+                      </div>
+                    </td>
+                    <td>{invoice.subscription?.subscriptionNo || 'N/A'}</td>
+                    <td>₹{Number(invoice.total || 0).toFixed(0)}</td>
+                    <td className="text-sm">{formatDateTime(invoice.createdAt)}</td>
+                    <td className="text-sm">
+                      {invoice.paidAt ? (
+                        <span className="text-green-600">{formatDateTime(invoice.paidAt)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
+                    <td>
+                      <StatusBadge status={invoice.status} />
+                    </td>
+                    <td>
+                      {nextActions.length > 0 ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                              Actions
+                              <ChevronDown size={14} className="ml-1" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {nextActions.map((action) => (
+                              <DropdownMenuItem
+                                key={action}
+                                onClick={() => handleStatusChange(invoice.id, action)}
+                              >
+                                {getActionLabel(action)}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Completed</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

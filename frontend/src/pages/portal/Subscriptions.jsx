@@ -3,7 +3,7 @@ import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { getCustomerSubscriptions, getPlanById, getProductById } from '../../data/mockData.js';
+import { subscriptionService } from '../../lib/services/subscriptionService.js';
 import { SubscriptionStatus } from '../../data/constants.js';
 import { Calendar, Package, CreditCard, Clock } from 'lucide-react';
 import { SearchFilter } from '../../components/SearchFilter.jsx';
@@ -14,26 +14,39 @@ import { useNavigate } from 'react-router-dom';
 export default function PortalSubscriptions() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const subscriptions = user ? getCustomerSubscriptions(user.id) : [];
-  const [filteredSubscriptions, setFilteredSubscriptions] = useState(subscriptions);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [filteredSubscriptions, setFilteredSubscriptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate initial loading
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    loadSubscriptions();
   }, []);
+
+  const loadSubscriptions = async () => {
+    try {
+      const result = await subscriptionService.getAll();
+      if (result.success && Array.isArray(result.data)) {
+        setSubscriptions(result.data);
+        setFilteredSubscriptions(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load subscriptions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Enrich subscriptions with plan and product data for filtering
   const enrichedSubscriptions = subscriptions.map(sub => {
-    const plan = getPlanById(sub.planId);
-    const product = plan ? getProductById(plan.productId) : null;
+    const plan = sub.plan;
+    // Get product from subscription lines if available
+    const product = sub.lines?.[0]?.product || null;
     return {
       ...sub,
       planName: plan?.name || 'Unknown',
       productName: product?.name || 'Unknown',
       productType: product?.type || 'Unknown',
-      price: plan?.price || 0,
+      price: Number(plan?.price || 0),
     };
   });
 
@@ -54,9 +67,9 @@ export default function PortalSubscriptions() {
       key: 'productType',
       label: 'Product Type',
       options: [
-        { value: 'Service', label: 'Service' },
-        { value: 'Support', label: 'Support' },
-        { value: 'Feature', label: 'Feature' },
+        { value: 'SERVICE', label: 'Service' },
+        { value: 'SAAS', label: 'SaaS' },
+        { value: 'LICENSE', label: 'License' },
       ],
     },
   ];
@@ -67,8 +80,7 @@ export default function PortalSubscriptions() {
 
   const activeCount = subscriptions.filter(s => s.status === SubscriptionStatus.ACTIVE).length;
   const totalValue = subscriptions.reduce((sum, s) => {
-    const plan = getPlanById(s.planId);
-    return sum + (plan?.price || 0);
+    return sum + Number(s.plan?.price || 0);
   }, 0);
 
   return (
@@ -147,14 +159,14 @@ export default function PortalSubscriptions() {
       ) : (
         <div className="space-y-4">
           {filteredSubscriptions.map((subscription) => {
-            const plan = getPlanById(subscription.planId);
-            const product = plan ? getProductById(plan.productId) : null;
+            const plan = subscription.plan;
+            const product = subscription.lines?.[0]?.product || null;
             return (
               <div key={subscription.id} className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm text-muted-foreground">{subscription.number}</span>
+                      <span className="text-sm text-muted-foreground">{subscription.subscriptionNo}</span>
                       <StatusBadge status={subscription.status} />
                     </div>
                     <h3 className="text-lg font-semibold text-foreground">{plan?.name || 'Unknown Plan'}</h3>
@@ -166,10 +178,10 @@ export default function PortalSubscriptions() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary">
-                      ₹{plan?.price.toLocaleString('en-IN') || '0'}
+                      ₹{Number(plan?.price || 0).toLocaleString('en-IN')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      per {plan?.billingPeriod.toLowerCase() || 'month'}
+                      per {(plan?.billingPeriod || 'month').toLowerCase()}
                     </p>
                   </div>
                 </div>
@@ -180,11 +192,11 @@ export default function PortalSubscriptions() {
                     <div>
                       <p className="text-xs text-muted-foreground">Start Date</p>
                       <p className="text-sm font-medium text-foreground">
-                        {new Date(subscription.startDate).toLocaleDateString('en-IN', {
+                        {subscription.startDate ? new Date(subscription.startDate).toLocaleDateString('en-IN', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
-                        })}
+                        }) : 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -193,11 +205,11 @@ export default function PortalSubscriptions() {
                     <div>
                       <p className="text-xs text-muted-foreground">End Date</p>
                       <p className="text-sm font-medium text-foreground">
-                        {new Date(subscription.endDate).toLocaleDateString('en-IN', {
+                        {subscription.expirationDate ? new Date(subscription.expirationDate).toLocaleDateString('en-IN', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
-                        })}
+                        }) : 'N/A'}
                       </p>
                     </div>
                   </div>

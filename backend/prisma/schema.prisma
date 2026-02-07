@@ -93,6 +93,7 @@ model Product {
 	subscriptionLines     SubscriptionLine[]
 	quotationLines        QuotationTemplateLine[]
 	variants              ProductVariant[]
+	plans                 RecurringPlan[]
 
 	@@index([name])
 }
@@ -105,6 +106,10 @@ model RecurringPlan {
 	minQuantity   Int           @default(1)
 	startDate     DateTime
 	endDate       DateTime?
+
+	// Link to product
+	productId Int?
+	product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
 	// Plan options
 	autoClose Boolean @default(false)
@@ -120,6 +125,7 @@ model RecurringPlan {
 	quotationTemplates  QuotationTemplate[]
 
 	@@index([name])
+	@@index([productId])
 }
 
 model Subscription {
@@ -177,8 +183,11 @@ model Invoice {
 	taxTotal      Decimal @db.Decimal(10, 2) @default(0)
 	discountTotal Decimal @db.Decimal(10, 2) @default(0)
 	totalAmount   Decimal @db.Decimal(10, 2) @default(0)
+	total         Decimal @db.Decimal(10, 2) @default(0)
 
-	dueDate DateTime
+	dueDate       DateTime
+	paidAt        DateTime?
+	paymentMethod String?
 
 	// Link to subscription
 	subscriptionId Int

@@ -4,13 +4,19 @@ export const planService = {
   /**
    * Get all plans
    * GET /api/plans
+   * @param {Object} params - Optional query params
+   * @param {number} params.productId - Filter by product ID
    */
-  getAll: async () => {
+  getAll: async (params = {}) => {
     try {
-      const response = await api.get('/api/plans');
+      const queryParams = new URLSearchParams();
+      if (params.productId) queryParams.set('productId', params.productId);
+      const queryString = queryParams.toString();
+      const url = queryString ? `/api/plans?${queryString}` : '/api/plans';
+      const response = await api.get(url);
       return {
         success: true,
-        data: response.data.plans || response.data,
+        data: response.data.data || response.data.plans || response.data || [],
       };
     } catch (error) {
       return {
@@ -30,7 +36,7 @@ export const planService = {
       const response = await api.get(`/api/plans/${id}`);
       return {
         success: true,
-        data: response.data.plan || response.data,
+        data: response.data.data || response.data.plan || response.data,
       };
     } catch (error) {
       return {

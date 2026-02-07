@@ -10,7 +10,7 @@ export const productService = {
       const response = await api.get('/api/products');
       return {
         success: true,
-        data: response.data.products || response.data,
+        data: response.data.data || response.data.products || response.data || [],
       };
     } catch (error) {
       return {
@@ -30,7 +30,7 @@ export const productService = {
       const response = await api.get(`/api/products/${id}`);
       return {
         success: true,
-        data: response.data.product || response.data,
+        data: response.data.data || response.data.product || response.data,
       };
     } catch (error) {
       return {

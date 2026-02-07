@@ -5,36 +5,36 @@ const { authorizeRoles } = require('../middlewares/role.middleware');
 
 const router = express.Router();
 
-// All product routes require authentication and ADMIN role
+// Admin-only routes for create, update, delete
 const adminOnly = [authenticateToken, authorizeRoles('ADMIN')];
 
 /**
  * GET /api/products
- * Get all products
+ * Get all products - accessible to all authenticated users
  */
-router.get('/', ...adminOnly, productController.getAllProducts);
+router.get('/', authenticateToken, productController.getAllProducts);
 
 /**
  * GET /api/products/:id
- * Get product by ID
+ * Get product by ID - accessible to all authenticated users
  */
-router.get('/:id', ...adminOnly, productController.getProductById);
+router.get('/:id', authenticateToken, productController.getProductById);
 
 /**
  * POST /api/products
- * Create new product
+ * Create new product - admin only
  */
 router.post('/', ...adminOnly, productController.createProduct);
 
 /**
  * PUT /api/products/:id
- * Update product
+ * Update product - admin only
  */
 router.put('/:id', ...adminOnly, productController.updateProduct);
 
 /**
  * DELETE /api/products/:id
- * Delete product
+ * Delete product - admin only
  */
 router.delete('/:id', ...adminOnly, productController.deleteProduct);
 

@@ -13,11 +13,13 @@ import {
   LogOut,
   Menu,
   X,
+  Percent,
 } from 'lucide-react';
 
 const adminNavItems = [
   { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Products', path: '/admin/products', icon: Package },
+  { label: 'Discounts', path: '/admin/discounts', icon: Percent },
   { label: 'Users', path: '/admin/users', icon: Users },
 ];
 

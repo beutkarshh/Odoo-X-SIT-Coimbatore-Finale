@@ -2,7 +2,9 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { Button } from '../../components/ui/Button.jsx';
-import { mockProducts, getPlansByProductId, createSubscription, createInvoice, getPlanById, getProductById } from '../../data/mockData.js';
+import { productService } from '../../lib/services/productService.js';
+import { planService } from '../../lib/services/planService.js';
+import { purchaseService } from '../../lib/services/purchaseService.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 import { Package, Layers, CreditCard, CheckCircle, AlertCircle, FileText, Download, X, ArrowLeft, Search, Smartphone, Building2, ChevronRight } from 'lucide-react';
@@ -20,6 +22,8 @@ export default function PortalProducts() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productPlans, setProductPlans] = useState([]); // Store plans for selected product
+  const [plansLoading, setPlansLoading] = useState(false);
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
   const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -27,7 +31,8 @@ export default function PortalProducts() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card', 'upi', 'netbanking'
   const [selectedUPIApp, setSelectedUPIApp] = useState(null);
@@ -68,9 +73,28 @@ export default function PortalProducts() {
 
   // Simulate initial loading
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    loadProducts();
   }, []);
+
+  const loadProducts = async () => {
+    try {
+      setIsLoading(true);
+      const result = await productService.getAll();
+      if (result.success && Array.isArray(result.data)) {
+        setProducts(result.data);
+        setFilteredProducts(result.data);
+      } else {
+        setProducts([]);
+        setFilteredProducts([]);
+      }
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      setProducts([]);
+      setFilteredProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter config for products
   const filterConfig = [
@@ -78,9 +102,9 @@ export default function PortalProducts() {
       key: 'type',
       label: 'Type',
       options: [
-        { value: 'Service', label: 'Service' },
-        { value: 'Support', label: 'Support' },
-        { value: 'Feature', label: 'Feature' },
+        { value: 'SERVICE', label: 'Service' },
+        { value: 'SAAS', label: 'SaaS' },
+        { value: 'LICENSE', label: 'License' },
       ],
     },
   ];
@@ -120,9 +144,22 @@ export default function PortalProducts() {
     };
   };
 
-  const handleProductClick = (product) => {
+  const handleProductClick = async (product) => {
     setSelectedProduct(product);
+    setProductPlans([]);
+    setPlansLoading(true);
     setIsPlansModalOpen(true);
+    
+    try {
+      const result = await planService.getAll({ productId: product.id });
+      if (result.success && Array.isArray(result.data)) {
+        setProductPlans(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load plans:', error);
+    } finally {
+      setPlansLoading(false);
+    }
   };
 
   const handlePayNow = (plan) => {
@@ -166,15 +203,29 @@ export default function PortalProducts() {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const isSuccess = Math.random() > 0.1;
-
-    if (isSuccess) {
-      const invoiceData = calculateInvoice(selectedPlan);
-      const subscription = createSubscription(user.id, selectedPlan.id);
-      const invoice = createInvoice(user.id, subscription.id, invoiceData.totalAmount, user?.name || 'Customer', paymentMethod);
-      setGeneratedInvoice({ ...invoice, ...invoiceData, plan: selectedPlan, product: selectedProduct });
-      setPaymentStatus('success');
-    } else {
+    try {
+      // Call the purchase API
+      const result = await purchaseService.purchasePlan({
+        planId: selectedPlan.id,
+        productId: selectedProduct.id,
+        paymentMethod: paymentMethod,
+      });
+      
+      if (result.success && result.data) {
+        const invoiceData = calculateInvoice(selectedPlan);
+        setGeneratedInvoice({ 
+          ...result.data.invoice, 
+          ...invoiceData, 
+          plan: selectedPlan, 
+          product: selectedProduct 
+        });
+        setPaymentStatus('success');
+      } else {
+        console.error('Purchase failed:', result.message);
+        setPaymentStatus('error');
+      }
+    } catch (error) {
+      console.error('Failed to complete purchase:', error);
       setPaymentStatus('error');
     }
   };
@@ -186,11 +237,11 @@ export default function PortalProducts() {
 
   const getProductIcon = (type) => {
     switch (type) {
-      case 'Service':
+      case 'SERVICE':
         return <Layers className="w-8 h-8 text-primary" />;
-      case 'Support':
+      case 'SAAS':
         return <Package className="w-8 h-8 text-blue-500" />;
-      case 'Feature':
+      case 'LICENSE':
         return <Package className="w-8 h-8 text-purple-500" />;
       default:
         return <Package className="w-8 h-8 text-muted-foreground" />;
@@ -199,11 +250,11 @@ export default function PortalProducts() {
 
   const getTypeColor = (type) => {
     switch (type) {
-      case 'Service':
+      case 'SERVICE':
         return 'bg-primary/10 text-primary';
-      case 'Support':
+      case 'SAAS':
         return 'bg-blue-500/10 text-blue-500';
-      case 'Feature':
+      case 'LICENSE':
         return 'bg-purple-500/10 text-purple-500';
       default:
         return 'bg-muted text-muted-foreground';
@@ -244,7 +295,7 @@ export default function PortalProducts() {
       {/* Search and Filter */}
       <div className="mb-6">
         <SearchFilter
-          data={mockProducts}
+          data={products}
           searchFields={['name', 'type']}
           filterConfig={filterConfig}
           onFilterChange={handleFilterChange}
@@ -256,13 +307,13 @@ export default function PortalProducts() {
       {isLoading ? (
         <GridSkeleton count={6} CardComponent={ProductCardSkeleton} />
       ) : filteredProducts.length === 0 ? (
-        <NoProductsFound onBrowse={() => setFilteredProducts(mockProducts)} />
+        <NoProductsFound onBrowse={() => setFilteredProducts(products)} />
       ) : (
         /* Product Cards Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => {
-            const plans = getPlansByProductId(product.id);
-            const minPrice = plans.length > 0 ? Math.min(...plans.map((p) => p.price)) : 0;
+            const plans = product.plans || [];
+            const minPrice = plans.length > 0 ? Math.min(...plans.map((p) => Number(p.price || 0))) : Number(product.salesPrice || 0);
 
             return (
               <div
@@ -283,22 +334,22 @@ export default function PortalProducts() {
                   {product.name}
                 </h3>
 
-                <p className="text-sm text-muted-foreground mb-4">
-                  {product.type === 'Service' && 'Cloud-based service with scalable resources'}
-                  {product.type === 'Support' && '24/7 premium support with dedicated team'}
-                  {product.type === 'Feature' && 'Advanced features to boost productivity'}
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                  {product.type === 'SERVICE' && 'Subscription-based streaming and entertainment service'}
+                  {product.type === 'SAAS' && 'Cloud-based software solution with advanced features'}
+                  {product.type === 'LICENSE' && 'Premium software license with full access'}
                 </p>
 
                 <div className="flex items-center justify-between pt-4 border-t border-border">
                   <div>
                     <p className="text-xs text-muted-foreground">Starting from</p>
                     <p className="text-lg font-bold text-foreground">
-                      ₹{minPrice.toLocaleString('en-IN')}
+                      ₹{Math.floor(minPrice).toLocaleString('en-IN')}
                       <span className="text-sm font-normal text-muted-foreground">/mo</span>
                     </p>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {plans.length} plan{plans.length !== 1 ? 's' : ''} available
+                    View plans
                   </div>
                 </div>
               </div>
@@ -326,50 +377,54 @@ export default function PortalProducts() {
                 </p>
 
                 <div className="bg-card border border-border rounded-md overflow-hidden">
-                  <table className="erp-table">
-                    <thead>
-                      <tr>
-                        <th>Plan Name</th>
-                        <th>Monthly Price</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Billing</th>
-                        <th className="w-28">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getPlansByProductId(selectedProduct.id).map((plan) => (
-                        <tr key={plan.id}>
-                          <td className="font-medium text-foreground">{plan.name}</td>
-                          <td className="text-primary font-semibold">₹{plan.price.toLocaleString('en-IN')}</td>
-                          <td>{formatDate(plan.startDate)}</td>
-                          <td>{formatDate(plan.endDate)}</td>
-                          <td>
-                            <span className="px-2 py-1 text-xs rounded-full bg-muted">
-                              {plan.billingPeriod}
-                            </span>
-                          </td>
-                          <td>
-                            <Button
-                              size="sm"
-                              className="h-8 bg-primary hover:bg-primary/90"
-                              onClick={() => handlePayNow(plan)}
-                            >
-                              <CreditCard size={14} className="mr-1" />
-                              Subscribe
-                            </Button>
-                          </td>
+                  {plansLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : productPlans.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No subscription plans available for this product.
+                    </div>
+                  ) : (
+                    <table className="erp-table">
+                      <thead>
+                        <tr>
+                          <th>Plan Name</th>
+                          <th>Monthly Price</th>
+                          <th>Start Date</th>
+                          <th>End Date</th>
+                          <th>Billing</th>
+                          <th className="w-28">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {productPlans.map((plan) => (
+                          <tr key={plan.id}>
+                            <td className="font-medium text-foreground">{plan.name}</td>
+                            <td className="text-primary font-semibold">₹{Number(plan.price || 0).toLocaleString('en-IN')}</td>
+                            <td>{plan.startDate ? formatDate(plan.startDate) : 'N/A'}</td>
+                            <td>{plan.endDate ? formatDate(plan.endDate) : 'N/A'}</td>
+                            <td>
+                              <span className="px-2 py-1 text-xs rounded-full bg-muted">
+                                {plan.billingPeriod || 'Monthly'}
+                              </span>
+                            </td>
+                            <td>
+                              <Button
+                                size="sm"
+                                className="h-8 bg-primary hover:bg-primary/90"
+                                onClick={() => handlePayNow(plan)}
+                              >
+                                <CreditCard size={14} className="mr-1" />
+                                Subscribe
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
-
-                {getPlansByProductId(selectedProduct.id).length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No subscription plans available for this product.
-                  </div>
-                )}
               </>
             )}
           </div>

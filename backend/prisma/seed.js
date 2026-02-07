@@ -140,29 +140,19 @@ async function main() {
   }
 
   // ========================================
-  // 5. Seed Products (20 Products)
+  // 5. Seed Products (OTT & Subscription Platforms)
   // ========================================
   const products = [
-    { name: 'Cloud Pro Suite', type: 'Software', salesPrice: 299.99, costPrice: 150.00 },
-    { name: 'Enterprise CRM License', type: 'License', salesPrice: 499.99, costPrice: 250.00 },
-    { name: 'Email Marketing Platform', type: 'Service', salesPrice: 149.99, costPrice: 75.00 },
-    { name: 'Cloud Storage 500GB', type: 'Service', salesPrice: 49.99, costPrice: 25.00 },
-    { name: 'Project Management Tool', type: 'Software', salesPrice: 199.99, costPrice: 100.00 },
-    { name: 'Analytics Dashboard Pro', type: 'Software', salesPrice: 349.99, costPrice: 175.00 },
-    { name: 'Video Conferencing Suite', type: 'Service', salesPrice: 89.99, costPrice: 45.00 },
-    { name: 'Database Hosting Premium', type: 'Service', salesPrice: 399.99, costPrice: 200.00 },
-    { name: 'API Gateway Enterprise', type: 'License', salesPrice: 599.99, costPrice: 300.00 },
-    { name: 'Security Suite Advanced', type: 'Software', salesPrice: 449.99, costPrice: 225.00 },
-    { name: 'Backup & Recovery System', type: 'Service', salesPrice: 129.99, costPrice: 65.00 },
-    { name: 'Content Delivery Network', type: 'Service', salesPrice: 179.99, costPrice: 90.00 },
-    { name: 'IoT Platform License', type: 'License', salesPrice: 699.99, costPrice: 350.00 },
-    { name: 'Machine Learning API', type: 'Service', salesPrice: 549.99, costPrice: 275.00 },
-    { name: 'DevOps Automation Suite', type: 'Software', salesPrice: 429.99, costPrice: 215.00 },
-    { name: 'Customer Support Portal', type: 'Software', salesPrice: 249.99, costPrice: 125.00 },
-    { name: 'HR Management System', type: 'Software', salesPrice: 329.99, costPrice: 165.00 },
-    { name: 'Inventory Tracking Pro', type: 'Software', salesPrice: 279.99, costPrice: 140.00 },
-    { name: 'E-Commerce Platform', type: 'License', salesPrice: 799.99, costPrice: 400.00 },
-    { name: 'Mobile App Backend', type: 'Service', salesPrice: 379.99, costPrice: 190.00 },
+    { name: 'Netflix', type: 'SERVICE', salesPrice: 649.00, costPrice: 400.00 },
+    { name: 'Disney+ Hotstar', type: 'SERVICE', salesPrice: 1499.00, costPrice: 900.00 },
+    { name: 'Amazon Prime Video', type: 'SERVICE', salesPrice: 1499.00, costPrice: 900.00 },
+    { name: 'Spotify Premium', type: 'SERVICE', salesPrice: 119.00, costPrice: 70.00 },
+    { name: 'YouTube Premium', type: 'SERVICE', salesPrice: 129.00, costPrice: 80.00 },
+    { name: 'Apple Music', type: 'SERVICE', salesPrice: 99.00, costPrice: 60.00 },
+    { name: 'Zee5', type: 'SERVICE', salesPrice: 999.00, costPrice: 600.00 },
+    { name: 'SonyLIV', type: 'SERVICE', salesPrice: 999.00, costPrice: 600.00 },
+    { name: 'Adobe Creative Cloud', type: 'SAAS', salesPrice: 3499.00, costPrice: 2000.00 },
+    { name: 'Microsoft 365', type: 'SAAS', salesPrice: 4899.00, costPrice: 3000.00 },
   ];
 
   const createdProducts = [];
@@ -178,35 +168,69 @@ async function main() {
   }
 
   // ========================================
-  // 6. Seed Recurring Plans (15 Plans)
+  // 6. Seed Recurring Plans (Multiple plans per product)
   // ========================================
   const plans = [
-    { name: 'Basic Monthly', price: 29.99, billingPeriod: 'MONTHLY' },
-    { name: 'Pro Monthly', price: 79.99, billingPeriod: 'MONTHLY' },
-    { name: 'Enterprise Monthly', price: 199.99, billingPeriod: 'MONTHLY' },
-    { name: 'Starter Yearly', price: 299.99, billingPeriod: 'YEARLY' },
-    { name: 'Business Yearly', price: 899.99, billingPeriod: 'YEARLY' },
-    { name: 'Premium Monthly', price: 199.99, billingPeriod: 'MONTHLY' },
-    { name: 'Standard Monthly', price: 49.99, billingPeriod: 'MONTHLY' },
-    { name: 'Advanced Monthly', price: 129.99, billingPeriod: 'MONTHLY' },
-    { name: 'Ultra Yearly', price: 1499.99, billingPeriod: 'YEARLY' },
-    { name: 'Team Monthly', price: 149.99, billingPeriod: 'MONTHLY' },
-    { name: 'Corporate Yearly', price: 1999.99, billingPeriod: 'YEARLY' },
-    { name: 'Startup Monthly', price: 39.99, billingPeriod: 'MONTHLY' },
-    { name: 'Growth Weekly', price: 149.99, billingPeriod: 'WEEKLY' },
-    { name: 'Scale Yearly', price: 2499.99, billingPeriod: 'YEARLY' },
-    { name: 'Flex Monthly', price: 99.99, billingPeriod: 'MONTHLY' },
+    // Netflix Plans (product index 0)
+    { name: 'Netflix Mobile', price: 149.00, billingPeriod: 'MONTHLY', productIdx: 0 },
+    { name: 'Netflix Basic', price: 199.00, billingPeriod: 'MONTHLY', productIdx: 0 },
+    { name: 'Netflix Standard', price: 499.00, billingPeriod: 'MONTHLY', productIdx: 0 },
+    { name: 'Netflix Premium', price: 649.00, billingPeriod: 'MONTHLY', productIdx: 0 },
+    
+    // Disney+ Hotstar Plans (product index 1)
+    { name: 'Disney+ Hotstar Mobile', price: 499.00, billingPeriod: 'YEARLY', productIdx: 1 },
+    { name: 'Disney+ Hotstar Super', price: 899.00, billingPeriod: 'YEARLY', productIdx: 1 },
+    { name: 'Disney+ Hotstar Premium', price: 1499.00, billingPeriod: 'YEARLY', productIdx: 1 },
+    
+    // Amazon Prime Video Plans (product index 2)
+    { name: 'Prime Video Monthly', price: 299.00, billingPeriod: 'MONTHLY', productIdx: 2 },
+    { name: 'Prime Video Yearly', price: 1499.00, billingPeriod: 'YEARLY', productIdx: 2 },
+    
+    // Spotify Premium Plans (product index 3)
+    { name: 'Spotify Individual', price: 119.00, billingPeriod: 'MONTHLY', productIdx: 3 },
+    { name: 'Spotify Duo', price: 149.00, billingPeriod: 'MONTHLY', productIdx: 3 },
+    { name: 'Spotify Family', price: 179.00, billingPeriod: 'MONTHLY', productIdx: 3 },
+    
+    // YouTube Premium Plans (product index 4)
+    { name: 'YouTube Premium Individual', price: 129.00, billingPeriod: 'MONTHLY', productIdx: 4 },
+    { name: 'YouTube Premium Family', price: 189.00, billingPeriod: 'MONTHLY', productIdx: 4 },
+    
+    // Apple Music Plans (product index 5)
+    { name: 'Apple Music Individual', price: 99.00, billingPeriod: 'MONTHLY', productIdx: 5 },
+    { name: 'Apple Music Family', price: 149.00, billingPeriod: 'MONTHLY', productIdx: 5 },
+    
+    // Zee5 Plans (product index 6)
+    { name: 'Zee5 Mobile', price: 699.00, billingPeriod: 'YEARLY', productIdx: 6 },
+    { name: 'Zee5 Premium', price: 999.00, billingPeriod: 'YEARLY', productIdx: 6 },
+    
+    // SonyLIV Plans (product index 7)
+    { name: 'SonyLIV Mobile', price: 699.00, billingPeriod: 'YEARLY', productIdx: 7 },
+    { name: 'SonyLIV Premium', price: 999.00, billingPeriod: 'YEARLY', productIdx: 7 },
+    
+    // Adobe Creative Cloud Plans (product index 8)
+    { name: 'Adobe Photography', price: 999.00, billingPeriod: 'MONTHLY', productIdx: 8 },
+    { name: 'Adobe Single App', price: 1999.00, billingPeriod: 'MONTHLY', productIdx: 8 },
+    { name: 'Adobe All Apps', price: 3499.00, billingPeriod: 'MONTHLY', productIdx: 8 },
+    
+    // Microsoft 365 Plans (product index 9)
+    { name: 'Microsoft 365 Personal', price: 4899.00, billingPeriod: 'YEARLY', productIdx: 9 },
+    { name: 'Microsoft 365 Family', price: 5299.00, billingPeriod: 'YEARLY', productIdx: 9 },
   ];
 
   const createdPlans = [];
   for (const planData of plans) {
-    let plan = await prisma.recurringPlan.findFirst({ where: { name: planData.name } });
+    let plan = await prisma.recurringPlan.findFirst({ 
+      where: { 
+        name: planData.name
+      } 
+    });
     if (!plan) {
       plan = await prisma.recurringPlan.create({
         data: {
           name: planData.name,
           price: planData.price,
           billingPeriod: planData.billingPeriod,
+          productId: createdProducts[planData.productIdx]?.id || null,
           minQuantity: 1,
           startDate: new Date('2026-01-01'),
           endDate: null,
@@ -217,42 +241,68 @@ async function main() {
           isActive: true
         }
       });
-      console.log('✅ Created Recurring Plan:', plan.name);
+      console.log('✅ Created Recurring Plan:', plan.name, '→ Product:', createdProducts[planData.productIdx]?.name);
     } else {
-      console.log('ℹ️  Recurring Plan already exists:', plan.name);
+      // Update existing plan to link productId if missing
+      if (!plan.productId && createdProducts[planData.productIdx]?.id) {
+        await prisma.recurringPlan.update({
+          where: { id: plan.id },
+          data: { productId: createdProducts[planData.productIdx].id }
+        });
+        console.log('🔗 Linked plan to product:', plan.name, '→', createdProducts[planData.productIdx].name);
+      } else {
+        console.log('ℹ️  Recurring Plan already exists:', plan.name);
+      }
     }
     createdPlans.push(plan);
   }
 
   // ========================================
-  // 7. Seed Subscriptions (25 Subscriptions)
+  // 7. Seed Subscriptions (Users subscribe to various platforms)
   // ========================================
   const subscriptions = [
-    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[0]?.id, productId: createdProducts[0]?.id, status: 'ACTIVE', quantity: 2 },
-    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[4]?.id, productId: createdProducts[4]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[1]?.id, planId: createdPlans[1]?.id, productId: createdProducts[1]?.id, status: 'ACTIVE', quantity: 3 },
-    { customerId: createdPortalUsers[1]?.id, planId: createdPlans[6]?.id, productId: createdProducts[6]?.id, status: 'CONFIRMED', quantity: 1 },
-    { customerId: createdPortalUsers[2]?.id, planId: createdPlans[2]?.id, productId: createdProducts[2]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[2]?.id, planId: createdPlans[11]?.id, productId: createdProducts[11]?.id, status: 'ACTIVE', quantity: 5 },
-    { customerId: createdPortalUsers[3]?.id, planId: createdPlans[3]?.id, productId: createdProducts[3]?.id, status: 'CLOSED', quantity: 1 },
-    { customerId: createdPortalUsers[3]?.id, planId: createdPlans[7]?.id, productId: createdProducts[7]?.id, status: 'ACTIVE', quantity: 2 },
-    { customerId: createdPortalUsers[4]?.id, planId: createdPlans[5]?.id, productId: createdProducts[5]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[4]?.id, planId: createdPlans[9]?.id, productId: createdProducts[9]?.id, status: 'ACTIVE', quantity: 4 },
-    { customerId: createdPortalUsers[5]?.id, planId: createdPlans[8]?.id, productId: createdProducts[8]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[5]?.id, planId: createdPlans[12]?.id, productId: createdProducts[12]?.id, status: 'CLOSED', quantity: 1 },
-    { customerId: createdPortalUsers[6]?.id, planId: createdPlans[10]?.id, productId: createdProducts[10]?.id, status: 'ACTIVE', quantity: 2 },
-    { customerId: createdPortalUsers[6]?.id, planId: createdPlans[13]?.id, productId: createdProducts[13]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[7]?.id, planId: createdPlans[14]?.id, productId: createdProducts[14]?.id, status: 'ACTIVE', quantity: 3 },
-    { customerId: createdPortalUsers[7]?.id, planId: createdPlans[0]?.id, productId: createdProducts[0]?.id, status: 'CONFIRMED', quantity: 1 },
-    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[8]?.id, productId: createdProducts[8]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[1]?.id, planId: createdPlans[10]?.id, productId: createdProducts[10]?.id, status: 'ACTIVE', quantity: 2 },
-    { customerId: createdPortalUsers[2]?.id, planId: createdPlans[5]?.id, productId: createdProducts[5]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[3]?.id, planId: createdPlans[14]?.id, productId: createdProducts[14]?.id, status: 'CLOSED', quantity: 1 },
-    { customerId: createdPortalUsers[4]?.id, planId: createdPlans[1]?.id, productId: createdProducts[1]?.id, status: 'ACTIVE', quantity: 2 },
-    { customerId: createdPortalUsers[5]?.id, planId: createdPlans[3]?.id, productId: createdProducts[3]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[6]?.id, planId: createdPlans[7]?.id, productId: createdProducts[7]?.id, status: 'ACTIVE', quantity: 3 },
-    { customerId: createdPortalUsers[7]?.id, planId: createdPlans[9]?.id, productId: createdProducts[9]?.id, status: 'ACTIVE', quantity: 1 },
-    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[13]?.id, productId: createdProducts[13]?.id, status: 'ACTIVE', quantity: 1 },
+    // John Doe subscriptions
+    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[3]?.id, productId: createdProducts[0]?.id, status: 'ACTIVE', quantity: 1 }, // Netflix Premium
+    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[9]?.id, productId: createdProducts[3]?.id, status: 'ACTIVE', quantity: 1 }, // Spotify Individual
+    
+    // Jane Smith subscriptions
+    { customerId: createdPortalUsers[1]?.id, planId: createdPlans[6]?.id, productId: createdProducts[1]?.id, status: 'ACTIVE', quantity: 1 }, // Disney+ Hotstar Premium
+    { customerId: createdPortalUsers[1]?.id, planId: createdPlans[13]?.id, productId: createdProducts[4]?.id, status: 'CONFIRMED', quantity: 1 }, // YouTube Premium Family
+    
+    // Robert Wilson subscriptions
+    { customerId: createdPortalUsers[2]?.id, planId: createdPlans[8]?.id, productId: createdProducts[2]?.id, status: 'ACTIVE', quantity: 1 }, // Prime Video Yearly
+    { customerId: createdPortalUsers[2]?.id, planId: createdPlans[22]?.id, productId: createdProducts[8]?.id, status: 'ACTIVE', quantity: 1 }, // Adobe All Apps
+    
+    // Emily Brown subscriptions
+    { customerId: createdPortalUsers[3]?.id, planId: createdPlans[11]?.id, productId: createdProducts[3]?.id, status: 'ACTIVE', quantity: 1 }, // Spotify Family
+    { customerId: createdPortalUsers[3]?.id, planId: createdPlans[17]?.id, productId: createdProducts[6]?.id, status: 'CLOSED', quantity: 1 }, // Zee5 Premium
+    
+    // Michael Davis subscriptions
+    { customerId: createdPortalUsers[4]?.id, planId: createdPlans[2]?.id, productId: createdProducts[0]?.id, status: 'ACTIVE', quantity: 1 }, // Netflix Standard
+    { customerId: createdPortalUsers[4]?.id, planId: createdPlans[14]?.id, productId: createdProducts[5]?.id, status: 'ACTIVE', quantity: 1 }, // Apple Music Individual
+    
+    // Sarah Johnson subscriptions
+    { customerId: createdPortalUsers[5]?.id, planId: createdPlans[19]?.id, productId: createdProducts[7]?.id, status: 'ACTIVE', quantity: 1 }, // SonyLIV Premium
+    { customerId: createdPortalUsers[5]?.id, planId: createdPlans[24]?.id, productId: createdProducts[9]?.id, status: 'ACTIVE', quantity: 1 }, // Microsoft 365 Family
+    
+    // David Miller subscriptions
+    { customerId: createdPortalUsers[6]?.id, planId: createdPlans[5]?.id, productId: createdProducts[1]?.id, status: 'ACTIVE', quantity: 1 }, // Disney+ Hotstar Super
+    { customerId: createdPortalUsers[6]?.id, planId: createdPlans[12]?.id, productId: createdProducts[4]?.id, status: 'CONFIRMED', quantity: 1 }, // YouTube Premium Individual
+    
+    // Lisa Anderson subscriptions
+    { customerId: createdPortalUsers[7]?.id, planId: createdPlans[7]?.id, productId: createdProducts[2]?.id, status: 'ACTIVE', quantity: 1 }, // Prime Video Monthly
+    { customerId: createdPortalUsers[7]?.id, planId: createdPlans[20]?.id, productId: createdProducts[8]?.id, status: 'ACTIVE', quantity: 1 }, // Adobe Photography
+    
+    // Additional subscriptions for variety
+    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[15]?.id, productId: createdProducts[5]?.id, status: 'ACTIVE', quantity: 1 }, // Apple Music Family
+    { customerId: createdPortalUsers[1]?.id, planId: createdPlans[1]?.id, productId: createdProducts[0]?.id, status: 'ACTIVE', quantity: 1 }, // Netflix Basic
+    { customerId: createdPortalUsers[2]?.id, planId: createdPlans[10]?.id, productId: createdProducts[3]?.id, status: 'ACTIVE', quantity: 1 }, // Spotify Duo
+    { customerId: createdPortalUsers[3]?.id, planId: createdPlans[16]?.id, productId: createdProducts[6]?.id, status: 'ACTIVE', quantity: 1 }, // Zee5 Mobile
+    { customerId: createdPortalUsers[4]?.id, planId: createdPlans[18]?.id, productId: createdProducts[7]?.id, status: 'ACTIVE', quantity: 1 }, // SonyLIV Mobile
+    { customerId: createdPortalUsers[5]?.id, planId: createdPlans[21]?.id, productId: createdProducts[8]?.id, status: 'CLOSED', quantity: 1 }, // Adobe Single App
+    { customerId: createdPortalUsers[6]?.id, planId: createdPlans[23]?.id, productId: createdProducts[9]?.id, status: 'ACTIVE', quantity: 1 }, // Microsoft 365 Personal
+    { customerId: createdPortalUsers[7]?.id, planId: createdPlans[4]?.id, productId: createdProducts[1]?.id, status: 'ACTIVE', quantity: 1 }, // Disney+ Hotstar Mobile
+    { customerId: createdPortalUsers[0]?.id, planId: createdPlans[0]?.id, productId: createdProducts[0]?.id, status: 'QUOTATION', quantity: 1 }, // Netflix Mobile
   ];
 
   const createdSubscriptions = [];
@@ -361,10 +411,11 @@ async function main() {
   console.log(`   - ${createdPortalUsers.length} Portal Users`);
   console.log(`   - ${createdTaxes.length} Taxes`);
   console.log(`   - ${createdDiscounts.length} Discounts`);
-  console.log(`   - ${createdProducts.length} Products`);
-  console.log(`   - ${createdPlans.length} Recurring Plans`);
-  console.log(`   - ${createdSubscriptions.length} Subscriptions`);
+  console.log(`   - ${createdProducts.length} OTT & Subscription Products`);
+  console.log(`   - ${createdPlans.length} Subscription Plans`);
+  console.log(`   - ${createdSubscriptions.length} User Subscriptions`);
   console.log(`   - Invoices and Payments created`);
+  console.log(`\n🎬 Products: Netflix, Disney+, Prime Video, Spotify, YouTube Premium, Apple Music, Zee5, SonyLIV, Adobe CC, Microsoft 365`);
 }
 
 main()

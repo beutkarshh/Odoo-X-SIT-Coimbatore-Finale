@@ -112,7 +112,7 @@ export default function PlanSubscribers() {
         </Button>
         <PageHeader title={`${plan.name} - Subscribers`} />
         <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
-          <span>₹{plan.price.toFixed(0)} / {plan.billingPeriod}</span>
+          <span>₹{Number(plan.price || 0).toFixed(0)} / {plan.billingPeriod}</span>
           <span>•</span>
           <span>{subscriptions.length} Total Subscribers</span>
         </div>
