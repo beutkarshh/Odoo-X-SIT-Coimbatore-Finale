@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { cn } from '../lib/utils.js';
+import { ThemeToggle } from './ThemeToggle.jsx';
 import {
   LayoutDashboard,
   Package,
@@ -28,8 +29,8 @@ const internalNavItems = [
 const portalNavItems = [
   { label: 'Dashboard', path: '/portal/dashboard', icon: LayoutDashboard },
   { label: 'Products', path: '/portal/products', icon: Package },
-  { label: 'Subscriptions', path: '/portal/subscriptions', icon: Users },
-  { label: 'Invoices', path: '/portal/invoices', icon: FileText },
+  { label: 'My Subscriptions', path: '/portal/subscriptions', icon: Users },
+  { label: 'My Invoices', path: '/portal/invoices', icon: FileText },
   { label: 'Profile', path: '/portal/profile', icon: User },
 ];
 
@@ -138,6 +139,15 @@ export function Sidebar({ type = 'admin' }) {
             <p className="text-xs text-sidebar-muted truncate">{user?.email}</p>
           </div>
         )}
+        <div className="mb-2">
+          {sidebarOpen ? (
+            <ThemeToggle variant="sidebar" />
+          ) : (
+            <div className="flex justify-center">
+              <ThemeToggle variant="sidebar" />
+            </div>
+          )}
+        </div>
         <button
           onClick={handleLogout}
           className="sidebar-nav-item w-full justify-center"

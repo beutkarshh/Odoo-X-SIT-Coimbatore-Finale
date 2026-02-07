@@ -7,6 +7,17 @@ import { Package, Users, IndianRupee, FileText } from 'lucide-react';
 export default function AdminDashboard() {
   const stats = getDashboardStats();
 
+  const formatDateTime = (date) => {
+    return new Date(date).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   return (
     <Layout type="admin">
       <PageHeader title="Dashboard" />
@@ -32,7 +43,7 @@ export default function AdminDashboard() {
             </div>
             <div className="p-4 bg-muted/50 rounded-md">
               <p className="text-sm font-medium text-foreground">Last Updated</p>
-              <p className="text-xs text-muted-foreground mt-1">{new Date().toLocaleDateString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">{formatDateTime(new Date())}</p>
             </div>
           </div>
         </div>

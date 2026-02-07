@@ -16,6 +16,18 @@ import {
 export default function InternalInvoices() {
   const [invoices, setInvoices] = useState(getInvoicesWithDetails());
 
+  const formatDateTime = (date) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   const getNextActions = (status) => {
     return INVOICE_TRANSITIONS[status] || [];
   };
@@ -47,7 +59,8 @@ export default function InternalInvoices() {
               <th>Customer</th>
               <th>Subscription</th>
               <th>Amount</th>
-              <th>Created Date</th>
+              <th>Created Date & Time</th>
+              <th>Paid At</th>
               <th>Status</th>
               <th className="w-32">Actions</th>
             </tr>
@@ -59,10 +72,22 @@ export default function InternalInvoices() {
               return (
                 <tr key={invoice.id}>
                   <td className="font-medium text-foreground">{invoice.number}</td>
-                  <td>{invoice.user?.name}</td>
+                  <td>
+                    <div>
+                      <p className="font-medium">{invoice.customerName || invoice.user?.name}</p>
+                      <p className="text-xs text-muted-foreground">{invoice.user?.email}</p>
+                    </div>
+                  </td>
                   <td>{invoice.subscription?.number}</td>
                   <td>₹{invoice.total.toFixed(0)}</td>
-                  <td>{new Date(invoice.createdAt).toLocaleDateString()}</td>
+                  <td className="text-sm">{formatDateTime(invoice.createdAt)}</td>
+                  <td className="text-sm">
+                    {invoice.paidAt ? (
+                      <span className="text-green-600">{formatDateTime(invoice.paidAt)}</span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </td>
                   <td>
                     <StatusBadge status={invoice.status} />
                   </td>

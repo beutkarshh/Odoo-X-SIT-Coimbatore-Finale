@@ -290,54 +290,66 @@ export const mockInvoices = [
     number: 'INV-001',
     total: 6699,
     status: InvoiceStatus.PAID,
-    createdAt: new Date('2024-06-01'),
+    createdAt: new Date('2024-06-01T10:30:00'),
+    paidAt: new Date('2024-06-01T10:30:45'),
     userId: 3,
     subscriptionId: 1,
+    customerName: 'Alice Customer',
   },
   {
     id: 2,
     number: 'INV-002',
     total: 6699,
     status: InvoiceStatus.PAID,
-    createdAt: new Date('2024-07-01'),
+    createdAt: new Date('2024-07-01T14:15:00'),
+    paidAt: new Date('2024-07-01T14:16:30'),
     userId: 3,
     subscriptionId: 1,
+    customerName: 'Alice Customer',
   },
   {
     id: 3,
     number: 'INV-003',
     total: 6699,
     status: InvoiceStatus.CONFIRMED,
-    createdAt: new Date('2024-08-01'),
+    createdAt: new Date('2024-08-01T09:45:00'),
+    paidAt: null,
     userId: 3,
     subscriptionId: 1,
+    customerName: 'Alice Customer',
   },
   {
     id: 4,
     number: 'INV-004',
     total: 2499,
     status: InvoiceStatus.PAID,
-    createdAt: new Date('2024-07-01'),
+    createdAt: new Date('2024-07-01T16:20:00'),
+    paidAt: new Date('2024-07-01T16:21:15'),
     userId: 4,
     subscriptionId: 2,
+    customerName: 'Bob User',
   },
   {
     id: 5,
     number: 'INV-005',
     total: 2499,
     status: InvoiceStatus.CONFIRMED,
-    createdAt: new Date('2024-08-01'),
+    createdAt: new Date('2024-08-01T11:00:00'),
+    paidAt: null,
     userId: 4,
     subscriptionId: 2,
+    customerName: 'Bob User',
   },
   {
     id: 6,
     number: 'INV-006',
     total: 16599,
     status: InvoiceStatus.DRAFT,
-    createdAt: new Date('2024-08-15'),
+    createdAt: new Date('2024-08-15T08:30:00'),
+    paidAt: null,
     userId: 5,
     subscriptionId: 3,
+    customerName: 'Carol Enterprise',
   },
 ];
 
@@ -347,7 +359,10 @@ export const getPlanById = (id) => mockPlans.find(p => p.id === id);
 
 export const getProductById = (id) => mockProducts.find(p => p.id === id);
 
-export const getSubscriptionById = (id) => mockSubscriptions.find(s => s.id === id);
+export const getSubscriptionById = (id) => {
+  const allSubs = getAllSubscriptions();
+  return allSubs.find(s => s.id === id);
+};
 
 export const getPlansByProductId = (productId) => mockPlans.filter(p => p.productId === productId);
 
@@ -367,11 +382,98 @@ export const getInvoicesWithDetails = () =>
     subscription: getSubscriptionById(inv.subscriptionId),
   }));
 
-export const getCustomerSubscriptions = (userId) =>
-  mockSubscriptions.filter(s => s.userId === userId);
+// localStorage keys for user-created data
+const USER_SUBSCRIPTIONS_KEY = 'userSubscriptions';
+const USER_INVOICES_KEY = 'userInvoices';
 
-export const getCustomerInvoices = (userId) =>
-  mockInvoices.filter(i => i.userId === userId);
+// Get user-created subscriptions from localStorage
+export const getUserCreatedSubscriptions = () => {
+  const stored = localStorage.getItem(USER_SUBSCRIPTIONS_KEY);
+  return stored ? JSON.parse(stored) : [];
+};
+
+// Get user-created invoices from localStorage
+export const getUserCreatedInvoices = () => {
+  const stored = localStorage.getItem(USER_INVOICES_KEY);
+  return stored ? JSON.parse(stored) : [];
+};
+
+// Get all subscriptions (mock + user-created)
+export const getAllSubscriptions = () => {
+  return [...mockSubscriptions, ...getUserCreatedSubscriptions()];
+};
+
+// Get all invoices (mock + user-created)
+export const getAllInvoices = () => {
+  return [...mockInvoices, ...getUserCreatedInvoices()];
+};
+
+// Create a new subscription
+export const createSubscription = (userId, planId) => {
+  const userSubscriptions = getUserCreatedSubscriptions();
+  const allSubs = getAllSubscriptions();
+  const nextId = Math.max(...allSubs.map(s => s.id), 0) + 1;
+  const nextNumber = `SUB-${String(allSubs.length + 1).padStart(3, '0')}`;
+  
+  const plan = getPlanById(planId);
+  const startDate = new Date();
+  const endDate = new Date();
+  if (plan?.billingPeriod === 'Monthly') {
+    endDate.setMonth(endDate.getMonth() + 1);
+  } else {
+    endDate.setFullYear(endDate.getFullYear() + 1);
+  }
+
+  const newSubscription = {
+    id: nextId,
+    number: nextNumber,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    status: SubscriptionStatus.ACTIVE,
+    userId,
+    planId,
+  };
+
+  userSubscriptions.push(newSubscription);
+  localStorage.setItem(USER_SUBSCRIPTIONS_KEY, JSON.stringify(userSubscriptions));
+  return newSubscription;
+};
+
+// Create a new invoice after payment
+export const createInvoice = (userId, subscriptionId, amount, customerName = 'Customer', paymentMethod = 'card') => {
+  const userInvoices = getUserCreatedInvoices();
+  const allInvoices = getAllInvoices();
+  const nextId = Math.max(...allInvoices.map(i => i.id), 0) + 1;
+  const nextNumber = `INV-${String(allInvoices.length + 1).padStart(3, '0')}`;
+  const now = new Date().toISOString();
+
+  const newInvoice = {
+    id: nextId,
+    number: nextNumber,
+    total: amount,
+    status: InvoiceStatus.PAID,
+    createdAt: now,
+    paidAt: now,
+    userId,
+    subscriptionId,
+    customerName,
+    paymentMethod,
+  };
+
+  userInvoices.push(newInvoice);
+  localStorage.setItem(USER_INVOICES_KEY, JSON.stringify(userInvoices));
+  return newInvoice;
+};
+
+export const getCustomerSubscriptions = (userId) => {
+  const allSubs = getAllSubscriptions();
+  return allSubs.filter(s => s.userId === userId);
+};
+
+export const getCustomerInvoices = (userId) => {
+  const allInvoices = getAllInvoices();
+  return allInvoices.filter(i => i.userId === userId);
+};
 
 export const getDashboardStats = () => ({
   totalProducts: mockProducts.length,
