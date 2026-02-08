@@ -6,27 +6,33 @@ import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { subscriptionService } from '../../lib/services/subscriptionService.js';
 import { invoiceService } from '../../lib/services/invoiceService.js';
+import { discountService } from '../../lib/services/discountService.js';
 import { SubscriptionStatus, InvoiceStatus } from '../../data/constants.js';
-import { CreditCard, FileText, Calendar, Clock, Loader2 } from 'lucide-react';
+import { CreditCard, FileText, Calendar, Clock, Loader2, Tag } from 'lucide-react';
 
 export default function PortalDashboard() {
   const { user } = useAuth();
   const [subscriptions, setSubscriptions] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [subsResult, invResult] = await Promise.all([
+        const [subsResult, invResult, offersResult] = await Promise.all([
           subscriptionService.getAll(),
           invoiceService.getAll(),
+          discountService.getAvailableCoupons(),
         ]);
         if (subsResult.success && Array.isArray(subsResult.data)) {
           setSubscriptions(subsResult.data);
         }
         if (invResult.success && Array.isArray(invResult.data)) {
           setInvoices(invResult.data);
+        }
+        if (offersResult?.success && Array.isArray(offersResult.data)) {
+          setOffers(offersResult.data);
         }
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
@@ -80,6 +86,12 @@ export default function PortalDashboard() {
     });
   };
 
+  const formatOfferValue = (offer) => {
+    if (!offer) return '';
+    if (offer.type === 'FIXED') return `₹${Number(offer.value || 0).toFixed(0)} OFF`;
+    return `${Number(offer.value || 0).toFixed(0)}% OFF`;
+  };
+
   if (loading) {
     return (
       <Layout type="portal">
@@ -131,6 +143,49 @@ export default function PortalDashboard() {
           </div>
         </div>
       )}
+
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground">Offers for you</h2>
+          <span className="text-xs text-muted-foreground">Use coupon codes during checkout</span>
+        </div>
+        <div className="bg-card border border-border rounded-md p-6">
+          {offers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {offers.slice(0, 6).map((offer) => (
+                <div
+                  key={offer.id}
+                  className="border border-border rounded-lg p-4 hover:bg-muted/40 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{offer.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {offer.endDate ? `Valid till ${formatDate(offer.endDate)}` : 'No expiry'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-primary">
+                      <Tag size={16} />
+                      <span className="text-sm font-semibold">{formatOfferValue(offer)}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <div className="px-2 py-1 rounded-md bg-muted text-foreground text-xs font-mono">
+                      {offer.couponCode}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {offer.minPurchase ? `Min ₹${Number(offer.minPurchase).toFixed(0)}` : 'No minimum'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-sm text-muted-foreground">No active offers right now</div>
+          )}
+        </div>
+      </div>
 
       <div>
         <h2 className="text-lg font-semibold text-foreground mb-4">Recent Invoices</h2>

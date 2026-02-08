@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { ThemeToggle } from './ThemeToggle.jsx';
-import { LogOut, User, ChevronDown } from 'lucide-react';
+import { LogOut, User, ChevronDown, Bell, CheckCheck } from 'lucide-react';
+import { notificationService } from '../lib/services/notificationService.js';
 
 const PillNav = ({
   logo = '/logo.svg',
@@ -23,6 +24,9 @@ const PillNav = ({
   const location = useLocation();
   const { user } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotifMenuOpen, setIsNotifMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const circleRefs = useRef([]);
   const tlRefs = useRef([]);
@@ -34,6 +38,7 @@ const PillNav = ({
   const navItemsRef = useRef(null);
   const logoRef = useRef(null);
   const userMenuRef = useRef(null);
+  const notifMenuRef = useRef(null);
 
   useEffect(() => {
     const layout = () => {
@@ -128,10 +133,36 @@ const PillNav = ({
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
+			if (notifMenuRef.current && !notifMenuRef.current.contains(event.target)) {
+				setIsNotifMenuOpen(false);
+			}
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const refreshUnreadCount = async () => {
+    const result = await notificationService.getUnreadCount();
+    if (result.success) {
+      setUnreadCount(Number(result.data?.count || 0));
+    }
+  };
+
+  const refreshNotifications = async () => {
+    const result = await notificationService.getAll({ limit: 6 });
+    if (result.success) {
+      setNotifications(Array.isArray(result.data) ? result.data : []);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    refreshUnreadCount();
+    // light polling so the bell updates without manual refresh
+    const id = window.setInterval(() => refreshUnreadCount(), 15000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const handleEnter = i => {
     const tl = tlRefs.current[i];
@@ -354,6 +385,84 @@ const PillNav = ({
           {/* Right side - User menu & Theme */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
+
+            {user && (
+              <div className="relative" ref={notifMenuRef}>
+                <button
+                  onClick={async () => {
+                    const next = !isNotifMenuOpen;
+                    setIsNotifMenuOpen(next);
+                    if (next) {
+                      await Promise.all([refreshUnreadCount(), refreshNotifications()]);
+                    }
+                  }}
+                  className="relative flex items-center justify-center w-10 h-10 rounded-full transition-colors hover:bg-muted"
+                  aria-label="Notifications"
+                >
+                  <Bell size={18} className="text-foreground" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[11px] flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {isNotifMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+                      <p className="text-sm font-semibold text-foreground">Notifications</p>
+                      <button
+                        onClick={async () => {
+                          await notificationService.markAllRead();
+                          await Promise.all([refreshUnreadCount(), refreshNotifications()]);
+                        }}
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                      >
+                        <CheckCheck size={14} />
+                        Mark all read
+                      </button>
+                    </div>
+
+                    <div className="max-h-96 overflow-auto">
+                      {notifications.length > 0 ? (
+                        notifications.map((n) => (
+                          <button
+                            key={n.id}
+                            onClick={async () => {
+                              if (!n.isRead) {
+                                await notificationService.markRead(n.id);
+                                await Promise.all([refreshUnreadCount(), refreshNotifications()]);
+                              }
+                              if (n.linkUrl) {
+                                window.location.href = n.linkUrl;
+                              }
+                              setIsNotifMenuOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-3 border-b border-border last:border-b-0 hover:bg-muted/60 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className={`text-sm ${n.isRead ? 'text-muted-foreground' : 'text-foreground font-medium'} truncate`}>
+                                  {n.title}
+                                </p>
+                                {n.message && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                    {n.message}
+                                  </p>
+                                )}
+                              </div>
+                              {!n.isRead && <span className="mt-1 w-2 h-2 rounded-full bg-primary" />}
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-sm text-muted-foreground text-center">No notifications</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             
             {showUserMenu && user && (
               <div className="relative" ref={userMenuRef}>

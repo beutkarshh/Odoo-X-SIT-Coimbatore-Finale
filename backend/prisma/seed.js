@@ -94,6 +94,40 @@ async function main() {
   }
 
   // ========================================
+  // 2.1 Seed Notifications (Idempotent per user)
+  // ========================================
+  const usersForNotifications = [admin, internalUser, ...createdPortalUsers].filter(Boolean);
+  for (const u of usersForNotifications) {
+    const existingCount = await prisma.notification.count({ where: { userId: u.id } });
+    if (existingCount > 0) {
+      console.log('ℹ️  Notifications already exist for:', u.email);
+      continue;
+    }
+
+    await prisma.notification.createMany({
+      data: [
+        {
+          userId: u.id,
+          title: 'Welcome to SubsManager',
+          message: 'Your account is ready. Explore plans and manage invoices easily.',
+          type: 'info',
+          linkUrl: '/portal/products',
+          isRead: false,
+        },
+        {
+          userId: u.id,
+          title: 'New offers available',
+          message: 'Check the dashboard for active coupon codes you can use today.',
+          type: 'offer',
+          linkUrl: '/portal/dashboard',
+          isRead: false,
+        },
+      ],
+    });
+    console.log('✅ Seeded notifications for:', u.email);
+  }
+
+  // ========================================
   // 3. Seed Taxes
   // ========================================
   const taxes = [

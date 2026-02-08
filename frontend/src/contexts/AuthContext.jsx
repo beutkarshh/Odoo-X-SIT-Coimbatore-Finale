@@ -7,7 +7,14 @@ const AuthContext = createContext(undefined);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('currentUser');
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      // If localStorage is corrupted, clear it to avoid blank screen on load.
+      localStorage.removeItem('currentUser');
+      return null;
+    }
   });
 
   const login = useCallback(async (email, password) => {

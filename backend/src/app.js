@@ -16,6 +16,7 @@ const variantRoutes = require('./routes/productVariant.routes');
 const quotationTemplateRoutes = require('./routes/quotationTemplate.routes');
 const reportRoutes = require('./routes/report.routes');
 const purchaseRoutes = require('./routes/purchase.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 function createApp() {
 	const app = express();
@@ -47,6 +48,7 @@ function createApp() {
 	app.use('/api/quotation-templates', quotationTemplateRoutes);
 	app.use('/api/reports', reportRoutes);
 	app.use('/api/purchase', purchaseRoutes);
+	app.use('/api/notifications', notificationRoutes);
 
 	// 404
 	app.use((_req, res) => {
